@@ -20,7 +20,11 @@ import SideBar from './SideBar'
  * Our elements
  */
 const elements = ref(initialElements)
-const { findNode, onConnect, addEdges, onNodeDragStop, addNodes, project, vueFlowRef } = useVueFlow({
+let id = 0
+function getId() {
+  return `dndnode_${id++}`
+}
+const { findNode, onConnect, addEdges, onNodeDrag, onNodeDragStop, getNodes, addNodes, project, vueFlowRef } = useVueFlow({
   nodes: [
     {
       id: '1',
@@ -33,14 +37,23 @@ const { findNode, onConnect, addEdges, onNodeDragStop, addNodes, project, vueFlo
 
 function onDragOver(event) {
   event.preventDefault()
-
   if (event.dataTransfer) {
     event.dataTransfer.dropEffect = 'move'
   }
 }
+onConnect((params) => addEdges([params])),
+onNodeDrag(({ intersections }) => {
+  const intersectionIds = intersections.map((intersection) => intersection.id)
+  // elements.value.findIndex(el => el.target === n.)
+  
+  getNodes.value.forEach((n) => {
+    const isIntersecting = intersectionIds.includes(n.id)
+    n.class = isIntersecting ? 'intersecting' : ''
+  })
+})
 
-onConnect((params) => addEdges([params]))
 function onDrop(event) {
+  console.log('onDrop')
   const type = event.dataTransfer?.getData('application/vueflow')
 
   const { left, top } = vueFlowRef.value.getBoundingClientRect()
@@ -49,7 +62,6 @@ function onDrop(event) {
     x: event.clientX - left,
     y: event.clientY - top,
   })
-
   const newNode = {
     id: getId(),
     type,
@@ -75,10 +87,7 @@ function onDrop(event) {
   })
 }
 
-let id = 0
-function getId() {
-  return `dndnode_${id++}`
-}
+
 
 /**
  * This is a Vue Flow event-hook which can be listened to from anywhere you call the composable, instead of only on the main component
@@ -90,9 +99,41 @@ function getId() {
 // })
 
 onNodeDragStop((e) => {
-  // let Node = {...e}
-  // Node.node.position = { x: 0, y: 0}
-  console.log('drag stop', e)
+  let edges = elements.value.filter(el => el.source === e.node.id)
+  console.log(edges, 'edges')
+  getNodes.value.forEach((n) => {
+    if (n.class === 'intersecting') {
+      let connectedNodes = []
+      elements.value.forEach((element) => {
+        if (element.source === n.id) {
+          connectedNodes.push(
+            elements.value.find(node => node.id === element.target)
+          )
+        } 
+      })
+      console.log(connectedNodes)
+      if (!connectedNodes.length) {
+        e.node.position.x = n.position.x
+        e.node.position.y = n.position.y + 50
+      } else {
+        let maxX = 0
+        connectedNodes.forEach(el => {
+          el.position.x = el.position.x - 80
+          if (maxX < el.position.x) maxX = el.position.x
+        })
+        console.log(maxX, 'maxX')
+        e.node.position.x = maxX + 170
+        e.node.position.y = n.position.y + 50
+      }
+
+      n.class = ''
+  // { id: 'e1-2', source: '1', target: '2', animated: true },
+      elements.value.push({id: `e${n.id}-${e.node.id}`, source: n.id, target: e.node.id, animated: true })
+      // let currentNode = elements.value.find((node) => node.id === e.node.id)
+      
+      // currentNode['extent'] = [[e.node.position.y - 1000, e.node.position.x], [e.node.position.x + 1000, e.node.position.y]]
+    }
+  })
 })
 
 /**
@@ -181,6 +222,7 @@ body,
   transform: scale(75%);
   transform-origin: bottom right;
 }
+.vue-flow__node.intersecting{background-color:#ff0}
 
 .basicflow.dark{background:#57534e;color:#fffffb}.basicflow.dark .vue-flow__node{background:#292524;color:#fffffb}.basicflow.dark .vue-flow__controls .vue-flow__controls-button{background:#292524;fill:#fffffb;border-color:#fffffb}.basicflow.dark .vue-flow__edge-textbg{fill:#292524}.basicflow.dark .vue-flow__edge-text{fill:#fffffb}.basicflow .controls{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}.basicflow .controls button{padding:4px;border-radius:5px;font-weight:600;-webkit-box-shadow:0px 5px 10px 0px rgba(0,0,0,.3);box-shadow:0 5px 10px #0000004d;cursor:pointer;display:flex;justify-content:center;align-items:center}.basicflow .controls button:hover{transform:scale(102%);transition:.25s all ease}
 
