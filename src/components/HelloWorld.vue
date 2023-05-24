@@ -1,13 +1,14 @@
 <script setup>
 // import { Panel, PanelPosition, VueFlow, isNode, useVueFlow } from '@vue-flow/core'
 import { VueFlow, useVueFlow } from '@vue-flow/core'
-
+import distributeRectangles from './intersections'
 import { nextTick, watch } from 'vue'
 // import { Background } from '@vue-flow/background'
 // import { Controls } from '@vue-flow/controls'
 // import { MiniMap } from '@vue-flow/minimap'
 import { ref } from 'vue'
 import { initialElements } from './initial-elements.js'
+// import ToolbarNode from './ToolbarNode.vue'
 import SideBar from './SideBar'
 
 /**
@@ -19,7 +20,61 @@ import SideBar from './SideBar'
 /**
  * Our elements
  */
+// const rectangels = computed(() => {
+//   return getNodes.value.map(node => {
+//     return { width: node.dimensions.width, height: node.dimensions.height, x: node.position.x, y: node.position.y, id: node.id }
+//   })
+// })
 const elements = ref(initialElements)
+// const defaultNodeStyle = {
+//   border: '1px solid #10b981',
+//   background: '#ef467e',
+//   color: 'white',
+//   borderRadius: '99px',
+// }
+
+// const elements = ref([
+//   {
+//     id: '1',
+//     type: 'toolbar',
+//     label: 'toolbar top',
+//     data: { toolbarPosition: Position.Top },
+//     position: { x: 200, y: 0 },
+//     style: defaultNodeStyle,
+//   },
+//   {
+//     id: '2',
+//     type: 'toolbar',
+//     label: 'toolbar right',
+//     data: { toolbarPosition: Position.Right },
+//     position: { x: -50, y: 100 },
+//     style: defaultNodeStyle,
+//   },
+//   {
+//     id: '3',
+//     type: 'toolbar',
+//     label: 'toolbar bottom',
+//     data: { toolbarPosition: Position.Bottom },
+//     position: { x: 0, y: 200 },
+//     style: defaultNodeStyle,
+//   },
+//   {
+//     id: '4',
+//     type: 'toolbar',
+//     label: 'toolbar left',
+//     data: { toolbarPosition: Position.Left },
+//     position: { x: 200, y: 300 },
+//     style: defaultNodeStyle,
+//   },
+//   {
+//     id: '5',
+//     type: 'toolbar',
+//     label: 'toolbar always open',
+//     data: { toolbarPosition: Position.Top, toolbarVisible: true },
+//     position: { x: 0, y: -100 },
+//     style: defaultNodeStyle,
+//   },
+// ])
 let id = 0
 function getId() {
   return `dndnode_${id++}`
@@ -53,7 +108,6 @@ onNodeDrag(({ intersections }) => {
 })
 
 function onDrop(event) {
-  console.log('onDrop')
   const type = event.dataTransfer?.getData('application/vueflow')
 
   const { left, top } = vueFlowRef.value.getBoundingClientRect()
@@ -99,88 +153,59 @@ function onDrop(event) {
 // })
 
 onNodeDragStop((e) => {
-  let edges = elements.value.filter(el => el.source === e.node.id)
-  console.log(edges, 'edges')
   getNodes.value.forEach((n) => {
+    const connectedNodes = []
     if (n.class === 'intersecting') {
-      let connectedNodes = []
+
+      let connectedRects = [{ height: e.node.dimensions.height, width: e.node.dimensions.width, x: e.node.position.x, y: e.node.position.x, id: e.node.id }]
       elements.value.forEach((element) => {
         if (element.source === n.id) {
-          connectedNodes.push(
-            elements.value.find(node => node.id === element.target)
-          )
+          const connectedNode = findNode(element.target)
+          connectedRects.push({ height: connectedNode.dimensions.height, width: connectedNode.dimensions.width, x: connectedNode.position.x, y: connectedNode.position.x, id: connectedNode.id })
+          connectedNodes.push(connectedNode)
         } 
       })
-      console.log(connectedNodes)
+      console.log(connectedRects, 'rects')
       if (!connectedNodes.length) {
         e.node.position.x = n.position.x
         e.node.position.y = n.position.y + 50
       } else {
-        let maxX = 0
-        connectedNodes.forEach(el => {
-          el.position.x = el.position.x - 80
-          if (maxX < el.position.x) maxX = el.position.x
-        })
-        console.log(maxX, 'maxX')
-        e.node.position.x = maxX + 170
-        e.node.position.y = n.position.y + 50
+        const distibutedRects = distributeRectangles(connectedRects, n.position.x)
+        distibutedRects.forEach(el => {
+          let node = findNode(el.id)
+          node.position.x = el.x
+          node.position.y = n.position.y + 50
+          if (node.id === e.node.id) {
+            e.node.position.x = el.x
+            e.node.position.y = n.position.y + 50
+        }
+      })
       }
 
       n.class = ''
-  // { id: 'e1-2', source: '1', target: '2', animated: true },
       elements.value.push({id: `e${n.id}-${e.node.id}`, source: n.id, target: e.node.id, animated: true })
-      // let currentNode = elements.value.find((node) => node.id === e.node.id)
-      
-      // currentNode['extent'] = [[e.node.position.y - 1000, e.node.position.x], [e.node.position.x + 1000, e.node.position.y]]
     }
   })
 })
 
-/**
- * onConnect is called when a new connection is created.
- * You can add additional properties to your new edge (like a type or label) or block the creation altogether
- */
+
 onConnect((params) => addEdges([params]))
 
 const dark = ref(false)
 
-/**
- * To update node properties you can simply use your elements v-model and mutate the elements directly
- * Changes should always be reflected on the graph reactively, without the need to overwrite the elements
- */
-// function updatePos() {
-//   return elements.value.forEach((el) => {
-//     if (isNode(el)) {
-//       el.position = {
-//         x: Math.random(),
-//         y: Math.random(),
-//       }
-//     }
-//   })
-// }
+function deleteNode (e) {
+  const index = elements.value.findIndex(el => e.node.id === el.id)
+  elements.value.splice(index, 1)
+}
 
-/**
- * toObject transforms your current graph data to an easily persist-able object
- */
-// function logToObject() {
-//   return console.log(toObject())
-// }
-
-/**
- * Resets the current viewpane transformation (zoom & pan)
- */
-// function resetTransform() {
-//   return setTransform({ x: 0, y: 0, zoom: 1 })
-// }
-
-// function toggleClass() {
-//   return (dark.value = !dark.value)
-// }
 </script>
 
 <template>
   <div class="main" @drop="onDrop">
-    <VueFlow @dragover="onDragOver" v-model="elements" :class="{ dark }" class="basicflow" :default-viewport="{ zoom: 1.5 }" :min-zoom="0.2" :max-zoom="4">
+    <VueFlow @dragover="onDragOver" @nodeDoubleClick="deleteNode" v-model="elements" :class="{ dark }" class="basicflow" :default-viewport="{ zoom: 1.5 }" :min-zoom="0.2" :max-zoom="4">
+      <!-- <template #node-toolbar="nodeProps">
+        <ToolbarNode @deleteNode="deleteNode" :data="nodeProps.data" :id="nodeProps.id" :label="nodeProps.label"/>
+      </template> -->
     </VueFlow>
     <SideBar/>
   </div>

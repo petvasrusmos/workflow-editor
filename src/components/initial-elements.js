@@ -5,9 +5,11 @@
  * or split them up into nodes and edges and pass them to the `nodes` and `edges` props of Vue Flow (or useVueFlow composable)
  */
 export const initialElements = [
-  { id: '1', type: 'input', label: 'Вложенная',style: { backgroundColor: 'rgba(16, 185, 129, 0.5)', width: '200px', height: '150px' }, position: { x: 100, y: 10 }, class: 'light' },
+  // { id: '1', type: 'input', label: 'Вложенная',style: { backgroundColor: 'rgba(16, 185, 129, 0.5)', width: '200px', height: '150px' }, position: { x: 100, y: 10 }, class: 'light' },
   { id: '2', type: 'output', label: 'Node 2', position: { x: 300, y: 200 }, class: 'light' },
-  { id: '3', label: 'Node 3', position: { x: 25, y: 50 }, class: 'light' },
+  { id: '6', type: 'output', label: 'Node 6', position: { x: 300, y: 400 }, class: 'light', width: 400, height: 35 },
+
+  { id: '3', label: 'Node 3', position: { x: 25, y: 50 }, class: 'light', parent: '1', extent: 'parent'},
   { id: '4', label: 'Node 4', position: { x: 50, y: 250 }, class: 'light' },
   { id: '5', type: 'output', label: 'Node 5', position: { x: 300, y: 300 }, class: 'light' },
   // { id: 'e1-2', source: '1', target: '2', animated: true },
