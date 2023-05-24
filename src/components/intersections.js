@@ -61,12 +61,10 @@
     const rectangleCount = rectangles.length;
   const totalWidth = rectangles.reduce((total, rectangle) => total + rectangle.width, 0) + gap * (rectangleCount - 1);
 
-  // Проверка, является ли количество прямоугольников четным
   const isEven = rectangleCount % 2 === 0;
 
   const centerIndex = isEven ? rectangleCount / 2 : Math.floor(rectangleCount / 2);
 
-  // Установка начальной координаты x и левой границы
   let startX = centerX - (totalWidth / 2);
   let leftBoundary = centerX;
 
@@ -75,7 +73,6 @@
     const prevRect = rectangles[i + 1];
     const left = leftBoundary - prevRect.width / 2 - gap - rectangle.width / 2;
     rectangle.x = left + rectangle.width / 2;
-    // rectangle.y = rectangle.top + rectangle.height / 2;
     leftBoundary = left;
   }
 
@@ -89,7 +86,6 @@
     rightBoundary = left + rectangle.width / 2;
   }
 
-  // Проверка, пересекаются ли прямоугольники
   const isIntersecting = rectangles.some((rectangle, index) => {
     if (index === 0) {
       return false;
@@ -98,7 +94,6 @@
     return rectangle.left < prevRect.right + gap;
   });
 
-  // Если прямоугольники пересекаются, сдвигаем их
   if (isIntersecting) {
     const overlap = Math.abs(leftBoundary - rightBoundary) + gap;
     const shift = overlap / 2;
@@ -109,12 +104,10 @@
     }
   }
 
-  // Установка координат x и y для каждого прямоугольника
   let x = startX;
   for (let i = 0; i < rectangleCount; i++) {
     const rectangle = rectangles[i];
     rectangle.x = x + (rectangle.width / 2);
-    // rectangle.y = rectangle.top + (rectangle.height / 2);
     x += rectangle.width + gap;
   }
 
