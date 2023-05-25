@@ -57,7 +57,6 @@
 
   
   export default function distributeRectangles(rectangles, centerX, gap = 10 ) {
-    console.log(rectangles, 'before')
     const rectangleCount = rectangles.length;
   const totalWidth = rectangles.reduce((total, rectangle) => total + rectangle.width, 0) + gap * (rectangleCount - 1);
 
@@ -86,24 +85,6 @@
     rightBoundary = left + rectangle.width / 2;
   }
 
-  const isIntersecting = rectangles.some((rectangle, index) => {
-    if (index === 0) {
-      return false;
-    }
-    const prevRect = rectangles[index - 1];
-    return rectangle.left < prevRect.right + gap;
-  });
-
-  if (isIntersecting) {
-    const overlap = Math.abs(leftBoundary - rightBoundary) + gap;
-    const shift = overlap / 2;
-    startX += shift;
-    for (let i = 0; i < rectangleCount; i++) {
-      const rectangle = rectangles[i];
-      rectangle.x += shift;
-    }
-  }
-
   let x = startX;
   for (let i = 0; i < rectangleCount; i++) {
     const rectangle = rectangles[i];
@@ -111,7 +92,38 @@
     x += rectangle.width + gap;
   }
 
-    console.log(rectangles, 'after')
+  const isIntersecting = rectangles.some((rectangle, index) => {
+    if (index + 1 === rectangles.length) return false;
+    const nextRect = rectangles[index + 1];
+    const rectangleRight = rectangle.x + rectangle.width + gap;
+    const isInetersect = rectangleRight > nextRect.x;
+    if (isInetersect) {
+      const overlap = rectangleRight - nextRect.x;
+      rectangle.x -= overlap;
+    }
+    return isInetersect;
+  });
+
+  console.log(isIntersecting);
+
+  // if (isIntersecting) {
+  //   const overlap = Math.abs(leftBoundary - rightBoundary) + gap;
+  //   console.log(leftBoundary, rightBoundary);
+  //   const shift = overlap * 2;
+  //   startX += shift;
+  //   for (let i = 0; i < rectangleCount; i++) {
+  //     const rectangle = rectangles[i];
+  //     rectangle.x += shift;
+  //   }
+  // }
+
+  // let x = startX;
+  // for (let i = 0; i < rectangleCount; i++) {
+  //   const rectangle = rectangles[i];
+  //   rectangle.x = x + (rectangle.width / 2);
+  //   x += rectangle.width + gap;
+  // }
+
     
     return rectangles;
   }

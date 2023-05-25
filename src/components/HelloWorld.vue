@@ -1,7 +1,7 @@
 <script setup>
 // import { Panel, PanelPosition, VueFlow, isNode, useVueFlow } from '@vue-flow/core'
 import { VueFlow, useVueFlow } from '@vue-flow/core'
-import distributeRectangles from './intersections'
+import distributeSegments from './intersections'
 import { nextTick, watch } from 'vue'
 // import { Background } from '@vue-flow/background'
 // import { Controls } from '@vue-flow/controls'
@@ -152,38 +152,44 @@ function onDrop(event) {
 //   fitView()
 // })
 
+function findParent(node) {
+  const edge = elements.value.find((element) => (element.target === node.id) )
+  return findNode(edge.source)
+}
+
+function SetChildrenPosition(parent) {
+  const connectedNodes = []
+  const connectedRects = []
+  
+  elements.value.forEach((element) => {
+    if (element.source === parent.id) {
+      const connectedNode = findNode(element.target)
+      connectedRects.push({ height: connectedNode.dimensions.height, width: connectedNode.dimensions.width, x: connectedNode.position.x, y: connectedNode.position.x, id: connectedNode.id })
+      connectedNodes.push(connectedNode)
+    } 
+  })
+  console.log(connectedRects, 'rects')
+  if (!connectedNodes.length) {
+   return
+  } else if (connectedNodes.length === 1) {
+    connectedNodes[0].position.x = parent.position.x
+    connectedNodes[0].position.y = parent.position.y + 100
+  } else {
+    const distibutedRects = distributeSegments(connectedRects, parent.position.x, 10)
+    distibutedRects.forEach(el => {
+      let node = findNode(el.id)
+      node.position.x = el.x
+      node.position.y = parent.position.y + 100
+    })
+  }
+}
 onNodeDragStop((e) => {
   getNodes.value.forEach((n) => {
-    const connectedNodes = []
+    // const connectedNodes = []
     if (n.class === 'intersecting') {
-
-      let connectedRects = [{ height: e.node.dimensions.height, width: e.node.dimensions.width, x: e.node.position.x, y: e.node.position.x, id: e.node.id }]
-      elements.value.forEach((element) => {
-        if (element.source === n.id) {
-          const connectedNode = findNode(element.target)
-          connectedRects.push({ height: connectedNode.dimensions.height, width: connectedNode.dimensions.width, x: connectedNode.position.x, y: connectedNode.position.x, id: connectedNode.id })
-          connectedNodes.push(connectedNode)
-        } 
-      })
-      console.log(connectedRects, 'rects')
-      if (!connectedNodes.length) {
-        e.node.position.x = n.position.x
-        e.node.position.y = n.position.y + 50
-      } else {
-        const distibutedRects = distributeRectangles(connectedRects, n.position.x)
-        distibutedRects.forEach(el => {
-          let node = findNode(el.id)
-          node.position.x = el.x
-          node.position.y = n.position.y + 50
-          if (node.id === e.node.id) {
-            e.node.position.x = el.x
-            e.node.position.y = n.position.y + 50
-        }
-      })
-      }
-
+      elements.value.push({id: `e${n.id}-${e.node.id}`, source: n.id, target: e.node.id, type: 'smoothstep' })
+      SetChildrenPosition(n)
       n.class = ''
-      elements.value.push({id: `e${n.id}-${e.node.id}`, source: n.id, target: e.node.id, animated: true })
     }
   })
 })
@@ -194,28 +200,43 @@ onConnect((params) => addEdges([params]))
 const dark = ref(false)
 
 function deleteNode (e) {
-  const index = elements.value.findIndex(el => e.node.id === el.id)
-  elements.value.splice(index, 1)
+  const edgeIndex = elements.value.findIndex(el => e.node.id === el.target)
+  if (edgeIndex !== -1) {
+    const parent = findParent(e.node)
+    elements.value.splice(edgeIndex, 1)
+    SetChildrenPosition(parent)
+  } 
+  const nodeIndex = elements.value.findIndex(el => e.node.id === el.id)
+  elements.value.splice(nodeIndex, 1)  
+  
 }
 
 </script>
 
 <template>
-  <div class="main" @drop="onDrop">
-    <VueFlow @dragover="onDragOver" @nodeDoubleClick="deleteNode" v-model="elements" :class="{ dark }" class="basicflow" :default-viewport="{ zoom: 1.5 }" :min-zoom="0.2" :max-zoom="4">
-      <!-- <template #node-toolbar="nodeProps">
-        <ToolbarNode @deleteNode="deleteNode" :data="nodeProps.data" :id="nodeProps.id" :label="nodeProps.label"/>
-      </template> -->
-    </VueFlow>
-    <SideBar/>
+  <div class="main-wrapper">
+    <div class="main" @drop="onDrop">
+      <VueFlow @dragover="onDragOver" @nodeDoubleClick="deleteNode" v-model="elements" :class="{ dark }" class="basicflow" :default-viewport="{ zoom: 1.5 }" :min-zoom="0.2" :max-zoom="4">
+        <!-- <template #node-toolbar="nodeProps">
+          <ToolbarNode @deleteNode="deleteNode" :data="nodeProps.data" :id="nodeProps.id" :label="nodeProps.label"/>
+        </template> -->
+      </VueFlow>
+      <SideBar/>
+    </div>
   </div>
 </template>
 <style>
+.main-wrapper {
+  display: flex;
+  justify-content: center;
+}
 .main {
   display: flex;
-  width: 50%;
-  height: 100vh;
-  border: 1px solid black;
+  width: 75%;
+  min-height: 80vh;
+  border: 1px solid rgba(42, 40, 40, 0.419);
+  border-radius: 12px;
+  
 }
 vue-flow__minimap {
   transform: scale(75%);
