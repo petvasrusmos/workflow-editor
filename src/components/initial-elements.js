@@ -1,4 +1,4 @@
-// import { MarkerType } from '@vue-flow/core'
+import { Position } from '@vue-flow/core'
 
 /**
  * You can pass elements together as a v-model value
@@ -6,12 +6,30 @@
  */
 export const initialElements = [
   // { id: '1', type: 'input', label: 'Вложенная',style: { backgroundColor: 'rgba(16, 185, 129, 0.5)', width: '200px', height: '150px' }, position: { x: 100, y: 10 }, class: 'light' },
-  { id: '2', type: 'output', label: 'Node 2', position: { x: 300, y: 200 }, class: 'light' },
-  { id: '6', type: 'output', label: 'Node 6', position: { x: 300, y: 400 }, class: 'light', width: 400, height: 35 },
+  { id: '2', type: 'output', targetHandle: Position.Right, sourseHandle: Position.Left,  label: 'Node 2', position: { x: 300, y: 200 }, extent: 'parent', parentNode: '7', class: 'light', zIndex: 1, },
+  { id: '6', type: 'output', label: 'Node 6', position: { x: 300, y: 400 }, extent: 'parent', parentNode: '7', class: 'light', zIndex: 1, width: 400, height: 35 },
 
-  { id: '3', label: 'Node 3', position: { x: 25, y: 50 }, class: 'light', parent: '1', extent: 'parent'},
-  { id: '4', label: 'Node 4', position: { x: 50, y: 250 }, class: 'light' },
-  { id: '5', type: 'output', label: 'Node 5', position: { x: 300, y: 300 }, class: 'light' },
+  { id: '3', label: 'Node 3', position: { x: 25, y: 50 }, parentNode: '7', class: 'light', zIndex: 1, extent: 'parent'},
+  { id: '4', label: 'Node 4', position: { x: 50, y: 250 }, parentNode: '7', class: 'light', zIndex: 1, extent: 'parent' },
+  
+  { id: '5', type: 'output', label: 'Node 5', position: { x: 300, y: 300 }, parentNode: '7', zIndex: 1, class: 'light', extent: 'parent' },
+  { id: '7', type: 'timeline', label: 'Procces 1', position: { x: 0, y: 0 }, width: 2000, height: 500, zIndex: 0,  class: 'light', draggable: false },
+  { id: '8', type: 'timeline', label: 'Procces 2', position: { x: 0, y: 500 }, width: 2000, height: 500, zIndex: 0,  class: 'light', draggable: false },
+  { id: '9', type: 'timeline', label: 'Procces 3', position: { x: 0, y: 1000 }, width: 2000, height: 500, zIndex: 0,  class: 'light', draggable: false },
+  {
+    id: '10',
+    type: 'resizable',
+    label: 'NodeResizer',
+    position: { x: 0, y: 0 },
+    style: { background: '#fff', border: '2px solid black' },
+    zIndex: 1,
+    parentNode: '7',
+    extent: 'parent'
+  },
+  { id: '11', type: 'timeline', label: 'Node parent', position: { x: 700, y: 230 }, parentNode: '7', width: 170, height: 300, class: 'light', zIndex: 1, extent: 'parent' },
+  { id: '12', type: 'timeline', label: 'Node child', position: { x: 680, y: 230 }, parentNode: '11', class: 'light', zIndex: 2, extent: 'parent' },
+
+
   // { id: 'e1-2', source: '1', target: '2', animated: true },
   // { id: 'e1-3', label: 'edge with arrowhead', source: '1', target: '4', markerEnd: MarkerType.ArrowClosed },
   // {

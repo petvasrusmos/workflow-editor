@@ -1,80 +1,21 @@
 <script setup>
 // import { Panel, PanelPosition, VueFlow, isNode, useVueFlow } from '@vue-flow/core'
 import { VueFlow, useVueFlow } from '@vue-flow/core'
-import distributeSegments from './intersections'
+import distributeRectangles from './distribution-functions.js'
 import { nextTick, watch } from 'vue'
 // import { Background } from '@vue-flow/background'
 // import { Controls } from '@vue-flow/controls'
 // import { MiniMap } from '@vue-flow/minimap'
 import { ref } from 'vue'
 import { initialElements } from './initial-elements.js'
+import ResizableNode from './ResizableNode'
 // import ToolbarNode from './ToolbarNode.vue'
 import SideBar from './SideBar'
+import { defineProps } from 'vue';
 
-/**
- * useVueFlow provides all event handlers and store properties
- * You can pass the composable an object that has the same properties as the VueFlow component props
- */
-// const { onPaneReady, onNodeDragStop, onConnect, addEdges, setTransform, toObject } = useVueFlow()
 
-/**
- * Our elements
- */
-// const rectangels = computed(() => {
-//   return getNodes.value.map(node => {
-//     return { width: node.dimensions.width, height: node.dimensions.height, x: node.position.x, y: node.position.y, id: node.id }
-//   })
-// })
 const elements = ref(initialElements)
-// const defaultNodeStyle = {
-//   border: '1px solid #10b981',
-//   background: '#ef467e',
-//   color: 'white',
-//   borderRadius: '99px',
-// }
-
-// const elements = ref([
-//   {
-//     id: '1',
-//     type: 'toolbar',
-//     label: 'toolbar top',
-//     data: { toolbarPosition: Position.Top },
-//     position: { x: 200, y: 0 },
-//     style: defaultNodeStyle,
-//   },
-//   {
-//     id: '2',
-//     type: 'toolbar',
-//     label: 'toolbar right',
-//     data: { toolbarPosition: Position.Right },
-//     position: { x: -50, y: 100 },
-//     style: defaultNodeStyle,
-//   },
-//   {
-//     id: '3',
-//     type: 'toolbar',
-//     label: 'toolbar bottom',
-//     data: { toolbarPosition: Position.Bottom },
-//     position: { x: 0, y: 200 },
-//     style: defaultNodeStyle,
-//   },
-//   {
-//     id: '4',
-//     type: 'toolbar',
-//     label: 'toolbar left',
-//     data: { toolbarPosition: Position.Left },
-//     position: { x: 200, y: 300 },
-//     style: defaultNodeStyle,
-//   },
-//   {
-//     id: '5',
-//     type: 'toolbar',
-//     label: 'toolbar always open',
-//     data: { toolbarPosition: Position.Top, toolbarVisible: true },
-//     position: { x: 0, y: -100 },
-//     style: defaultNodeStyle,
-//   },
-// ])
+defineProps(['label'])
 let id = 0
 function getId() {
   return `dndnode_${id++}`
@@ -90,6 +31,8 @@ const { findNode, onConnect, addEdges, onNodeDrag, onNodeDragStop, getNodes, add
   ],
 })
 
+let intersectingList = ref([])
+console.log(intersectingList)
 function onDragOver(event) {
   event.preventDefault()
   if (event.dataTransfer) {
@@ -98,29 +41,35 @@ function onDragOver(event) {
 }
 onConnect((params) => addEdges([params])),
 onNodeDrag(({ intersections }) => {
+  intersectingList = [...intersections]
   const intersectionIds = intersections.map((intersection) => intersection.id)
   // elements.value.findIndex(el => el.target === n.)
-  
   getNodes.value.forEach((n) => {
-    const isIntersecting = intersectionIds.includes(n.id)
-    n.class = isIntersecting ? 'intersecting' : ''
+    const isIntersecting = (intersectionIds.includes(n.id))
+    n.class = (isIntersecting && n.type !== 'timeline') ? 'intersecting' : ''
   })
 })
 
 function onDrop(event) {
   const type = event.dataTransfer?.getData('application/vueflow')
-
+  let parentNode = null
   const { left, top } = vueFlowRef.value.getBoundingClientRect()
-
+  console.log(intersectingList, 'intersectingList')
+  if (intersectingList.value) { 
+    parentNode = intersectingList.value.find(el => el.type === 'timeline')
+  }
   const position = project({
     x: event.clientX - left,
     y: event.clientY - top,
   })
+  console.log(parentNode, 'parentNode')
   const newNode = {
     id: getId(),
     type,
     position,
     label: `${type} node`,
+    parentNode: parentNode ? parentNode.id : '',
+    extent: 'parent',
   }
 
   addNodes([newNode])
@@ -141,22 +90,26 @@ function onDrop(event) {
   })
 }
 
-
-
-/**
- * This is a Vue Flow event-hook which can be listened to from anywhere you call the composable, instead of only on the main component
- *
- * onPaneReady is called when viewpane & nodes have visible dimensions
- */
-// onPaneReady(({ fitView }) => {
-//   fitView()
-// })
-
 function findParent(node) {
   const edge = elements.value.find((element) => (element.target === node.id) )
   return findNode(edge.source)
 }
+const gap = 10
 
+function updateNodesRow(node) {
+  let nodesRow = findNodesRow(node, [])
+  console.log(nodesRow, 'nodesRow')
+}
+function findNodesRow(node, nodesRow) {
+  console.log(elements.value, node.id)
+  let edge = elements.value.find(edge => (edge.source === node.id))
+  if (edge) {
+    nodesRow.push(node)
+    let target = findNode(edge.target)
+    findNodesRow(target)
+  }
+  return nodesRow
+}
 function SetChildrenPosition(parent) {
   const connectedNodes = []
   const connectedRects = []
@@ -168,14 +121,13 @@ function SetChildrenPosition(parent) {
       connectedNodes.push(connectedNode)
     } 
   })
-  console.log(connectedRects, 'rects')
   if (!connectedNodes.length) {
-   return
+    console.log(connectedRects, 'rects')
   } else if (connectedNodes.length === 1) {
-    connectedNodes[0].position.x = parent.position.x
-    connectedNodes[0].position.y = parent.position.y + 100
+    connectedNodes[0].position.x = parent.position.x + parent.dimensions.width + gap
+    connectedNodes[0].position.y = parent.position.y
   } else {
-    const distibutedRects = distributeSegments(connectedRects, parent.position.x, 10)
+    const distibutedRects = distributeRectangles(connectedRects, parent.position.x, 10)
     distibutedRects.forEach(el => {
       let node = findNode(el.id)
       node.position.x = el.x
@@ -187,9 +139,10 @@ onNodeDragStop((e) => {
   getNodes.value.forEach((n) => {
     // const connectedNodes = []
     if (n.class === 'intersecting') {
-      elements.value.push({id: `e${n.id}-${e.node.id}`, source: n.id, target: e.node.id, type: 'smoothstep' })
+      elements.value.push({id: `e${n.id}-${e.node.id}`, source: n.id, target: e.node.id, type: 'smoothstep', zIndex: 1, })
       SetChildrenPosition(n)
       n.class = ''
+      updateNodesRow(n)
     }
   })
 })
@@ -203,6 +156,7 @@ function deleteNode (e) {
   const edgeIndex = elements.value.findIndex(el => e.node.id === el.target)
   if (edgeIndex !== -1) {
     const parent = findParent(e.node)
+    console.log(parent)
     elements.value.splice(edgeIndex, 1)
     SetChildrenPosition(parent)
   } 
@@ -216,12 +170,16 @@ function deleteNode (e) {
 <template>
   <div class="main-wrapper">
     <div class="main" @drop="onDrop">
+      <button @click="findNodesRow(findNode('4'), [])"> найти связи </button>
       <VueFlow @dragover="onDragOver" @nodeDoubleClick="deleteNode" v-model="elements" :class="{ dark }" class="basicflow" :default-viewport="{ zoom: 1.5 }" :min-zoom="0.2" :max-zoom="4">
+        <template #node-resizable="resizableNodeProps">
+          <ResizableNode :label="resizableNodeProps.label" />
+        </template>
         <!-- <template #node-toolbar="nodeProps">
           <ToolbarNode @deleteNode="deleteNode" :data="nodeProps.data" :id="nodeProps.id" :label="nodeProps.label"/>
         </template> -->
       </VueFlow>
-      <SideBar/>
+      <SideBar :label="label"/>
     </div>
   </div>
 </template>

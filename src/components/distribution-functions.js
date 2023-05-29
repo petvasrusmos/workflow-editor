@@ -1,63 +1,15 @@
- export function findRectanglesIntersection(rectangles) {
-    const len = rectangles.length;
-  
-    if (len < 2) {
-      return false;
-    }
-  
-    const intersections = [];
-  
-    for (let i = 0; i < len - 1; i++) {
-      for (let j = i + 1; j < len; j++) {
-        const rectA = rectangles[i];
-        const rectB = rectangles[j];
-  
-        const aHalfWidth = rectA.rect.width / 2;
-        const aHalfHeight = rectA.rect.height / 2;
-        const aLeft = rectA.position.x - aHalfWidth;
-        const aRight = rectA.position.x + aHalfWidth;
-        const aTop = rectA.position.y - aHalfHeight;
-        const aBottom = rectA.position.y + aHalfHeight;
-  
-        const bHalfWidth = rectB.rect.width / 2;
-        const bHalfHeight = rectB.rect.height / 2;
-        const bLeft = rectB.position.x - bHalfWidth;
-        const bRight = rectB.position.x + bHalfWidth;
-        const bTop = rectB.position.y - bHalfHeight;
-        const bBottom = rectB.position.y + bHalfHeight;
-  
-        const xOverlap = Math.max(0, Math.min(aRight, bRight) - Math.max(aLeft, bLeft));
-        const yOverlap = Math.max(0, Math.min(aBottom, bBottom) - Math.max(aTop, bTop));
-  
-        if (xOverlap && yOverlap) {
-          intersections.push({
-            rectA,
-            rectB,
-            intersection: {
-              position: {
-                x: Math.max(aLeft, bLeft) + xOverlap / 2,
-                y: Math.max(aTop, bTop) + yOverlap / 2,
-              },
-              rect: {
-                width: xOverlap,
-                height: yOverlap,
-              },
-            },
-          });
-        }
+export default { distributeRectangles, distributeRectanglesTowardRight }
+ 
+  function distributeRectanglesTowardRight(rectangles, gap) {
+    rectangles.forEach((rectangle, index) => {
+      if (index !== 0) return
+      else {
+        rectangle[index].x = rectangle[index - 1].width + gap 
       }
-    }
-  
-    if (intersections.length === 0) {
-      return false;
-    }
-  
-    return intersections;
+    });
   }
-
-  
-  export default function distributeRectangles(rectangles, centerX, gap = 10 ) {
-    const rectangleCount = rectangles.length;
+  function distributeRectangles(rectangles, centerX, gap = 10 ) {
+  const rectangleCount = rectangles.length;
   const totalWidth = rectangles.reduce((total, rectangle) => total + rectangle.width, 0) + gap * (rectangleCount - 1);
 
   const isEven = rectangleCount % 2 === 0;

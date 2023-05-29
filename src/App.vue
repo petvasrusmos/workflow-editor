@@ -1,16 +1,17 @@
 <template>
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <FlowComponent label="Timeline 1" msg="Welcome to Your Vue.js App"/>
+  <!-- <HelloWorld label="Timeline 2" style="margin-top: 10px;" /> -->
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import FlowComponent from './components/FlowComponent.vue'
 
 
 
 export default {
   name: 'App',
   components: {
-    HelloWorld,
+    FlowComponent,
   }
 }
 </script>

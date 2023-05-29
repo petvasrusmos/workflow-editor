@@ -1,4 +1,7 @@
 <script setup>
+import { defineProps } from 'vue';
+
+defineProps(['label'])
 function onDragStart(event, nodeType) {
   if (event.dataTransfer) {
     event.dataTransfer.setData('application/vueflow', nodeType)
@@ -10,7 +13,7 @@ function onDragStart(event, nodeType) {
 <template>
   <aside class="aside-wrapper">
     <div class="aside">
-      <h3 class="description">Можете попробовать перетащить блок на поле</h3>
+      <h3 class="description">{{ label }}</h3>
 
       <div class="nodes">
         <!-- <div class="vue-flow__node-input node" :draggable="true" @dragstart="onDragStart($event, 'input')">Input Node</div> -->
