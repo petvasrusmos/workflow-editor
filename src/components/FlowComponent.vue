@@ -1,7 +1,8 @@
 <script setup>
 // import { Panel, PanelPosition, VueFlow, isNode, useVueFlow } from '@vue-flow/core'
 import { VueFlow, useVueFlow } from '@vue-flow/core'
-import distributeRectangles from './distribution-functions.js'
+// import  distributeRectangles from './distribution-functions.js'
+import { distributeRectanglesTowardRight, distributeRectangles } from './distribution-functions.js' 
 import { nextTick, watch } from 'vue'
 // import { Background } from '@vue-flow/background'
 // import { Controls } from '@vue-flow/controls'
@@ -32,7 +33,6 @@ const { findNode, onConnect, addEdges, onNodeDrag, onNodeDragStop, getNodes, add
 })
 
 let intersectingList = ref([])
-console.log(intersectingList)
 function onDragOver(event) {
   event.preventDefault()
   if (event.dataTransfer) {
@@ -54,7 +54,6 @@ function onDrop(event) {
   const type = event.dataTransfer?.getData('application/vueflow')
   let parentNode = null
   const { left, top } = vueFlowRef.value.getBoundingClientRect()
-  console.log(intersectingList, 'intersectingList')
   if (intersectingList.value) { 
     parentNode = intersectingList.value.find(el => el.type === 'timeline')
   }
@@ -62,7 +61,6 @@ function onDrop(event) {
     x: event.clientX - left,
     y: event.clientY - top,
   })
-  console.log(parentNode, 'parentNode')
   const newNode = {
     id: getId(),
     type,
@@ -98,15 +96,35 @@ const gap = 10
 
 function updateNodesRow(node) {
   let nodesRow = findNodesRow(node, [])
-  console.log(nodesRow, 'nodesRow')
+  const connectedRects = []
+  nodesRow.forEach(el => {
+    connectedRects.push({ height: el.dimensions.height, width: el.dimensions.width, x: el.position.x, y: el.position.x, id: el.id })
+  })
+  console.log(connectedRects, 'rects')
+
+  const distributedRects = distributeRectanglesTowardRight(connectedRects)
+  console.log(distributedRects, 'distr rects')
+  distributedRects.forEach(el => {
+    let node = findNode(el.id)
+    node.position.x = el.x
+    node.position.y = el.y
+  })
+}
+function findStartNode(node) {
+  let edge = elements.value.find(edge => (edge.target === node.id))
+  if (edge) {
+    let source = findNode(edge.source)
+    findStartNode(source)
+  } else {
+    updateNodesRow(node)
+  }
 }
 function findNodesRow(node, nodesRow) {
-  console.log(elements.value, node.id)
   let edge = elements.value.find(edge => (edge.source === node.id))
+  nodesRow.push(node)
   if (edge) {
-    nodesRow.push(node)
     let target = findNode(edge.target)
-    findNodesRow(target)
+    nodesRow = findNodesRow(target, nodesRow)
   }
   return nodesRow
 }
@@ -140,9 +158,9 @@ onNodeDragStop((e) => {
     // const connectedNodes = []
     if (n.class === 'intersecting') {
       elements.value.push({id: `e${n.id}-${e.node.id}`, source: n.id, target: e.node.id, type: 'smoothstep', zIndex: 1, })
-      SetChildrenPosition(n)
+      // SetChildrenPosition(n)
       n.class = ''
-      updateNodesRow(n)
+      findStartNode(n)
     }
   })
 })
@@ -170,7 +188,7 @@ function deleteNode (e) {
 <template>
   <div class="main-wrapper">
     <div class="main" @drop="onDrop">
-      <button @click="findNodesRow(findNode('4'), [])"> найти связи </button>
+      <button @click="updateNodesRow(findNode('4'), [])"> найти связи </button>
       <VueFlow @dragover="onDragOver" @nodeDoubleClick="deleteNode" v-model="elements" :class="{ dark }" class="basicflow" :default-viewport="{ zoom: 1.5 }" :min-zoom="0.2" :max-zoom="4">
         <template #node-resizable="resizableNodeProps">
           <ResizableNode :label="resizableNodeProps.label" />
