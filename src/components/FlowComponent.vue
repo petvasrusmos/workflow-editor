@@ -2,7 +2,7 @@
 // import { Panel, PanelPosition, VueFlow, isNode, useVueFlow } from '@vue-flow/core'
 import { VueFlow, useVueFlow } from '@vue-flow/core'
 // import  distributeRectangles from './distribution-functions.js'
-import { distributeRectanglesTowardRight, distributeRectangles } from './distribution-functions.js' 
+import { distributeRectanglesTowardRight } from './distribution-functions.js' 
 import { nextTick, watch } from 'vue'
 // import { Background } from '@vue-flow/background'
 // import { Controls } from '@vue-flow/controls'
@@ -21,7 +21,7 @@ let id = 0
 function getId() {
   return `dndnode_${id++}`
 }
-const { findNode, onConnect, addEdges, onNodeDrag, onNodeDragStop, getNodes, addNodes, project, vueFlowRef } = useVueFlow({
+const { findNode, onConnect, addEdges, onNodeDrag, onNodeDragStop, getNodes, getEdges, addNodes, project, vueFlowRef } = useVueFlow({
   nodes: [
     {
       id: '1',
@@ -92,30 +92,43 @@ function findParent(node) {
   const edge = elements.value.find((element) => (element.target === node.id) )
   return findNode(edge.source)
 }
-const gap = 10
+const gap = 50
 
+function insertNodeBetween (leftNode, newNode) {
+  let rightNode = null
+  elements.value.push({id: `e${leftNode.id}-${newNode.id}`, source: leftNode.id, target: newNode.id, type: 'smoothstep', zIndex: 1, })
+  elements.value.forEach((el, index) => {
+    if (leftNode.id === el.source) {
+      rightNode = findNode(el.target)
+      elements.value.push({id: `e${newNode.id}-${rightNode.id}`, source: newNode.id, target: rightNode.id, type: 'smoothstep', zIndex: 1, })
+      elements.value.splice(index, 1)
+    }
+  })
+  findStartNode(leftNode, 'insert')
+}
 function updateNodesRow(node) {
   let nodesRow = findNodesRow(node, [])
+  let y = node.position.y
   const connectedRects = []
   nodesRow.forEach(el => {
     connectedRects.push({ height: el.dimensions.height, width: el.dimensions.width, x: el.position.x, y: el.position.x, id: el.id })
   })
-  console.log(connectedRects, 'rects')
-
-  const distributedRects = distributeRectanglesTowardRight(connectedRects)
-  console.log(distributedRects, 'distr rects')
+  const distributedRects = distributeRectanglesTowardRight(connectedRects, gap)
   distributedRects.forEach(el => {
     let node = findNode(el.id)
     node.position.x = el.x
-    node.position.y = el.y
+    node.position.y = y
   })
 }
-function findStartNode(node) {
+let times = 0
+function findStartNode(node, comment) {
+  console.log(times++, 'times', comment)
   let edge = elements.value.find(edge => (edge.target === node.id))
   if (edge) {
     let source = findNode(edge.source)
-    findStartNode(source)
+    findStartNode(source, comment)
   } else {
+    console.log('update', node)
     updateNodesRow(node)
   }
 }
@@ -128,39 +141,45 @@ function findNodesRow(node, nodesRow) {
   }
   return nodesRow
 }
-function SetChildrenPosition(parent) {
-  const connectedNodes = []
-  const connectedRects = []
+// function SetChildrenPosition(parent) {
+//   const connectedNodes = []
+//   const connectedRects = []
   
-  elements.value.forEach((element) => {
-    if (element.source === parent.id) {
-      const connectedNode = findNode(element.target)
-      connectedRects.push({ height: connectedNode.dimensions.height, width: connectedNode.dimensions.width, x: connectedNode.position.x, y: connectedNode.position.x, id: connectedNode.id })
-      connectedNodes.push(connectedNode)
-    } 
-  })
-  if (!connectedNodes.length) {
-    console.log(connectedRects, 'rects')
-  } else if (connectedNodes.length === 1) {
-    connectedNodes[0].position.x = parent.position.x + parent.dimensions.width + gap
-    connectedNodes[0].position.y = parent.position.y
-  } else {
-    const distibutedRects = distributeRectangles(connectedRects, parent.position.x, 10)
-    distibutedRects.forEach(el => {
-      let node = findNode(el.id)
-      node.position.x = el.x
-      node.position.y = parent.position.y + 100
-    })
-  }
-}
+//   elements.value.forEach((element) => {
+//     if (element.source === parent.id) {
+//       const connectedNode = findNode(element.target)
+//       connectedRects.push({ height: connectedNode.dimensions.height, width: connectedNode.dimensions.width, x: connectedNode.position.x, y: connectedNode.position.x, id: connectedNode.id })
+//       connectedNodes.push(connectedNode)
+//     } 
+//   })
+//   if (connectedNodes.length === 1) {
+//     connectedNodes[0].position.x = parent.position.x + parent.dimensions.width + gap
+//     connectedNodes[0].position.y = parent.position.y
+//   } else {
+//     const distibutedRects = distributeRectangles(connectedRects, parent.position.x, 10)
+//     distibutedRects.forEach(el => {
+//       let node = findNode(el.id)
+//       node.position.x = el.x
+//       node.position.y = parent.position.y + 100
+//     })
+//   }
+// }
 onNodeDragStop((e) => {
   getNodes.value.forEach((n) => {
     // const connectedNodes = []
     if (n.class === 'intersecting') {
+      // looking for another edge with this node for define is this would be a parallel or serial positioning
+      let alreadyConnected = []
+      getEdges.value.forEach(edge => { 
+        if (edge.source === n.id) alreadyConnected.push(findNode(edge.target))
+      })
+      if(alreadyConnected.length) {
+        insertNodeBetween(n, e.node)
+      }
       elements.value.push({id: `e${n.id}-${e.node.id}`, source: n.id, target: e.node.id, type: 'smoothstep', zIndex: 1, })
+      findStartNode(n, 'standard')
       // SetChildrenPosition(n)
       n.class = ''
-      findStartNode(n)
     }
   })
 })
@@ -171,15 +190,30 @@ onConnect((params) => addEdges([params]))
 const dark = ref(false)
 
 function deleteNode (e) {
-  const edgeIndex = elements.value.findIndex(el => e.node.id === el.target)
+  if (e.node.type === 'timeline' | 'child') return
+  let edgeIndex = -1
+  let newTarget = null
+  let newSource = null
+  elements.value.forEach((el, index) => { 
+    if (e.node.id === el.target) {
+      edgeIndex = index
+      newSource = findNode(el.source)
+    }
+    if (e.node.id === el.source) newTarget = findNode(el.target) 
+  })
+  console.log(newSource,'newSource', newTarget, 'newConnection')
   if (edgeIndex !== -1) {
     const parent = findParent(e.node)
     console.log(parent)
+    // SetChildrenPosition(parent)
     elements.value.splice(edgeIndex, 1)
-    SetChildrenPosition(parent)
   } 
   const nodeIndex = elements.value.findIndex(el => e.node.id === el.id)
   elements.value.splice(nodeIndex, 1)  
+  if(newSource && newTarget) {
+    elements.value.push({id: `e${newSource.id}-${newTarget.id}`, source: newSource.id, target: newTarget.id, type: 'smoothstep', zIndex: 1, })
+    findStartNode(newSource)
+  }
   
 }
 
@@ -188,7 +222,6 @@ function deleteNode (e) {
 <template>
   <div class="main-wrapper">
     <div class="main" @drop="onDrop">
-      <button @click="updateNodesRow(findNode('4'), [])"> найти связи </button>
       <VueFlow @dragover="onDragOver" @nodeDoubleClick="deleteNode" v-model="elements" :class="{ dark }" class="basicflow" :default-viewport="{ zoom: 1.5 }" :min-zoom="0.2" :max-zoom="4">
         <template #node-resizable="resizableNodeProps">
           <ResizableNode :label="resizableNodeProps.label" />

@@ -3,7 +3,9 @@ function distributeRectanglesTowardRight(rectangles, gap = 10) {
   console.log(rectangles, 'rect')
   rectangles.forEach((rectangle, index) => {
     if (index !== 0) {
-      rectangles[index].x = rectangles[index - 1].width + gap
+      rectangle.x = rectangles[index - 1].x + rectangles[index - 1].width + gap
+      rectangle.y = rectangles[index - 1].y
+
     }
   });
   return rectangles

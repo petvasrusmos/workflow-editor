@@ -26,8 +26,8 @@ export const initialElements = [
     parentNode: '7',
     extent: 'parent'
   },
-  { id: '11', type: 'timeline', label: 'Node parent', position: { x: 700, y: 230 }, parentNode: '7', width: 170, height: 300, class: 'light', zIndex: 1, extent: 'parent' },
-  { id: '12', type: 'timeline', label: 'Node child', position: { x: 680, y: 230 }, parentNode: '11', class: 'light', zIndex: 2, extent: 'parent' },
+  // { id: '11', type: 'nested', label: 'Node parent', position: { x: 700, y: 230 }, parentNode: '7', width: 170, height: 300, class: 'light', zIndex: 1, extent: 'parent' },
+  // { id: '12', type: 'child', label: 'Node child', position: { x: 680, y: 230 }, parentNode: '11', class: 'light', zIndex: 2, extent: 'parent' },
 
 
   // { id: 'e1-2', source: '1', target: '2', animated: true },
