@@ -9,8 +9,7 @@ import { nextTick, watch } from 'vue'
 // import { MiniMap } from '@vue-flow/minimap'
 import { ref } from 'vue'
 import { initialElements } from './initial-elements.js'
-import ResizableNode from './ResizableNode'
-// import ToolbarNode from './ToolbarNode.vue'
+import ToolbarNode from './ToolbarNode.vue'
 import SideBar from './SideBar'
 import { defineProps } from 'vue';
 
@@ -42,11 +41,13 @@ function onDragOver(event) {
 onConnect((params) => addEdges([params])),
 onNodeDrag(({ intersections }) => {
   intersectingList = [...intersections]
-  const intersectionIds = intersections.map((intersection) => intersection.id)
+  const intersectionsWithoutTimeline = intersections.filter(el => (el.type !== 'timeline') && (el.type !== 'child'))
+  const intersectionIds = intersectionsWithoutTimeline.map((intersection) => intersection.id)
   // elements.value.findIndex(el => el.target === n.)
   getNodes.value.forEach((n) => {
     const isIntersecting = (intersectionIds.includes(n.id))
-    n.class = (isIntersecting && n.type !== 'timeline') ? 'intersecting' : ''
+    console.log(intersectionsWithoutTimeline, 'intersections')
+    n.class = (isIntersecting && n.type !== 'child') ? 'intersecting' : ''
   })
 })
 
@@ -223,12 +224,9 @@ function deleteNode (e) {
   <div class="main-wrapper">
     <div class="main" @drop="onDrop">
       <VueFlow @dragover="onDragOver" @nodeDoubleClick="deleteNode" v-model="elements" :class="{ dark }" class="basicflow" :default-viewport="{ zoom: 1.5 }" :min-zoom="0.2" :max-zoom="4">
-        <template #node-resizable="resizableNodeProps">
-          <ResizableNode :label="resizableNodeProps.label" />
+        <template #node-toolbar="nodeProps">
+          <ToolbarNode @deleteNode="deleteNode" :data="nodeProps.data" :id="nodeProps.id"/>
         </template>
-        <!-- <template #node-toolbar="nodeProps">
-          <ToolbarNode @deleteNode="deleteNode" :data="nodeProps.data" :id="nodeProps.id" :label="nodeProps.label"/>
-        </template> -->
       </VueFlow>
       <SideBar :label="label"/>
     </div>
@@ -262,15 +260,6 @@ body,
 #app {
   margin: 0;
   height: 100%;
-}
-
-#app {
-  text-transform: uppercase;
-  font-family: 'JetBrains Mono', monospace;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
 }
 
 .vue-flow__minimap {
