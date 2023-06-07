@@ -15,20 +15,21 @@ export const initialElements = [
   // { id: '3', label: 'Node 3', position: { x: 25, y: 50 }, parentNode: '7', class: 'light', zIndex: 1, extent: 'parent'},
   // { id: '4', label: 'Node 4', position: { x: 50, y: 250 }, parentNode: '7', class: 'light', zIndex: 1, extent: 'parent' },
   // { id: '5', type: 'output', label: 'Node 5', position: { x: 300, y: 300 }, parentNode: '7', zIndex: 1, class: 'light', extent: 'parent' },
-  // { id: '7', type: 'timeline', label: 'Procces 1', position: { x: 0, y: 0 }, width: 2000, height: 500, zIndex: 0,  class: 'light', draggable: false },
+  { id: '7', type: 'timeline', label: 'Procces 1', position: { x: 0, y: 0 }, width: 4000, height: 1000, zIndex: 0,  class: 'light', draggable: false },
   // { id: '8', type: 'timeline', label: 'Procces 2', position: { x: 0, y: 500 }, width: 2000, height: 500, zIndex: 0,  class: 'light', draggable: false },
   // { id: '9', type: 'timeline', label: 'Procces 3', position: { x: 0, y: 1000 }, width: 2000, height: 500, zIndex: 0,  class: 'light', draggable: false },
   // { id: '6', type: 'output', label: 'Node 6', position: { x: 300, y: 400 }, extent: 'parent', parentNode: '7', class: 'light', zIndex: 1, width: 400, height: 35 },
-  // {
-  //   id: '10',
-  //   type: 'resizable',
-  //   label: 'NodeResizer',
-  //   position: { x: 0, y: 0 },
-  //   style: { background: '#fff', border: '2px solid black' },
-  //   zIndex: 1,
-  //   parentNode: '7',
-  //   extent: 'parent'
-  // },
+  {
+    id: '10',
+    type: 'resizable',
+    label: 'NodeResizer',
+    position: { x: 700, y: 1500 },
+    style: { background: '#fff', border: '2px solid black' },
+    zIndex: 3,
+    parentNode: '7',
+    extent: 'parent',
+    width: 384,
+  },
   // { id: '11', type: 'nested', label: 'Node parent', position: { x: 700, y: 230 }, parentNode: '7', width: 170, height: 300, class: 'light', zIndex: 1, extent: 'parent' },
   // { id: '12', type: 'child', label: 'Node child', position: { x: 680, y: 230 }, parentNode: '11', class: 'light', zIndex: 2, extent: 'parent' },
   {
@@ -39,6 +40,8 @@ export const initialElements = [
     position: { x: 0, y: 0 },
     style: defaultNodeStyle,
     zIndex: 2,
+    extent: 'parent',
+    parentNode: '7',
   },
   {
     id: '2',
@@ -48,6 +51,8 @@ export const initialElements = [
     position: { x: 200, y: 300 },
     style: defaultNodeStyle,
     zIndex: 2,
+    extent: 'parent',
+    parentNode: '7',
   },
   {
     id: '3',
@@ -57,6 +62,8 @@ export const initialElements = [
     position: { x: 500, y: 500 },
     style: defaultNodeStyle,
     zIndex: 2,
+    extent: 'parent',
+    parentNode: '7',
   },
   {
     id: '4',
@@ -66,6 +73,8 @@ export const initialElements = [
     position: { x: 600, y: 0 },
     style: defaultNodeStyle,
     zIndex: 2,
+    extent: 'parent',
+    parentNode: '7',
   },
   
   {

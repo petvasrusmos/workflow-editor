@@ -6,8 +6,6 @@
 <script>
 import FlowComponent from './components/FlowComponent.vue'
 
-
-
 export default {
   name: 'App',
   components: {

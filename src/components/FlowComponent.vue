@@ -10,6 +10,7 @@ import { nextTick, watch } from 'vue'
 import { ref } from 'vue'
 import { initialElements } from './initial-elements.js'
 import ToolbarNode from './ToolbarNode.vue'
+import ResizableNode from './ResizableNode.vue'
 import SideBar from './SideBar'
 import { defineProps } from 'vue';
 
@@ -32,6 +33,8 @@ const { findNode, onConnect, addEdges, onNodeDrag, onNodeDragStop, getNodes, get
 })
 
 let intersectingList = ref([])
+
+const nestedList = ref([])
 function onDragOver(event) {
   event.preventDefault()
   if (event.dataTransfer) {
@@ -46,7 +49,6 @@ onNodeDrag(({ intersections }) => {
   // elements.value.findIndex(el => el.target === n.)
   getNodes.value.forEach((n) => {
     const isIntersecting = (intersectionIds.includes(n.id))
-    console.log(intersectionsWithoutTimeline, 'intersections')
     n.class = (isIntersecting && n.type !== 'child') ? 'intersecting' : ''
   })
 })
@@ -121,15 +123,12 @@ function updateNodesRow(node) {
     node.position.y = y
   })
 }
-let times = 0
 function findStartNode(node, comment) {
-  console.log(times++, 'times', comment)
   let edge = elements.value.find(edge => (edge.target === node.id))
   if (edge) {
     let source = findNode(edge.source)
     findStartNode(source, comment)
   } else {
-    console.log('update', node)
     updateNodesRow(node)
   }
 }
@@ -190,26 +189,26 @@ onConnect((params) => addEdges([params]))
 
 const dark = ref(false)
 
-function deleteNode (e) {
-  if (e.node.type === 'timeline' | 'child') return
+function deleteNode (id) {
+  let node = findNode(id) 
+  if (node.type === 'timeline' | 'child') return
   let edgeIndex = -1
   let newTarget = null
   let newSource = null
   elements.value.forEach((el, index) => { 
-    if (e.node.id === el.target) {
+    if (id === el.target) {
       edgeIndex = index
       newSource = findNode(el.source)
     }
-    if (e.node.id === el.source) newTarget = findNode(el.target) 
+    if (id === el.source) newTarget = findNode(el.target) 
   })
-  console.log(newSource,'newSource', newTarget, 'newConnection')
   if (edgeIndex !== -1) {
-    const parent = findParent(e.node)
+    const parent = findParent(node)
     console.log(parent)
     // SetChildrenPosition(parent)
     elements.value.splice(edgeIndex, 1)
   } 
-  const nodeIndex = elements.value.findIndex(el => e.node.id === el.id)
+  const nodeIndex = elements.value.findIndex(el => id === el.id)
   elements.value.splice(nodeIndex, 1)  
   if(newSource && newTarget) {
     elements.value.push({id: `e${newSource.id}-${newTarget.id}`, source: newSource.id, target: newTarget.id, type: 'smoothstep', zIndex: 1, })
@@ -223,9 +222,12 @@ function deleteNode (e) {
 <template>
   <div class="main-wrapper">
     <div class="main" @drop="onDrop">
-      <VueFlow @dragover="onDragOver" @nodeDoubleClick="deleteNode" v-model="elements" :class="{ dark }" class="basicflow" :default-viewport="{ zoom: 1.5 }" :min-zoom="0.2" :max-zoom="4">
+      <VueFlow @dragover="onDragOver" v-model="elements" :class="{ dark }" class="basicflow" :default-viewport="{ zoom: 1.5 }" :min-zoom="0.2" :max-zoom="4">
+        <template #node-resizable="resizableNodeProps">
+          <ResizableNode :label="resizableNodeProps.label" :list="nestedList" />
+        </template>
         <template #node-toolbar="nodeProps">
-          <ToolbarNode @deleteNode="deleteNode" :data="nodeProps.data" :id="nodeProps.id"/>
+          <ToolbarNode @deleteNode="deleteNode" :data="nodeProps" :id="nodeProps.id"/>
         </template>
       </VueFlow>
       <SideBar :label="label"/>
