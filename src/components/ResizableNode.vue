@@ -6,7 +6,6 @@ import Draggable from 'vuedraggable'
 import ToolbarNode from './ToolbarNode.vue'
 
 defineProps(['label', 'list'])
-
 let cards = ref([1, 2, 3, 4, 5])
 </script>
 
@@ -20,8 +19,9 @@ let cards = ref([1, 2, 3, 4, 5])
       v-model="cards" 
       group="cards" 
       item-key="id"
-      class="task__list"
+      class="task__list nodrag"
       drag-class="drag"
+      ghost-class="ghost"
     >
       <template #item="{element}">
         <div class="task__node">
@@ -76,5 +76,13 @@ let cards = ref([1, 2, 3, 4, 5])
 
 .task__node {
   margin-bottom: 12px;
+}
+
+.ghost {
+  background: grey;
+}
+
+.ghost > div {
+  visibility: hidden;
 }
 </style>

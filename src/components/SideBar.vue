@@ -1,8 +1,8 @@
 <script setup>
 import { defineProps } from 'vue';
-
 defineProps(['label'])
 function onDragStart(event, nodeType) {
+  console.log('start')
   if (event.dataTransfer) {
     event.dataTransfer.setData('application/vueflow', nodeType)
     event.dataTransfer.effectAllowed = 'move'
@@ -19,7 +19,6 @@ function onDragStart(event, nodeType) {
         <!-- <div class="vue-flow__node-input node" :draggable="true" @dragstart="onDragStart($event, 'input')">Input Node</div> -->
 
         <div class="vue-flow__node-default node" :draggable="true" @dragstart="onDragStart($event, 'default')">Default Node</div>
-
         <div class="vue-flow__node-output node" :draggable="true" @dragstart="onDragStart($event, 'output')">Output Node</div>
       </div>
     </div>

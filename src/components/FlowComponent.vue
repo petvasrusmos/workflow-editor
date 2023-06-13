@@ -36,6 +36,7 @@ let intersectingList = ref([])
 
 const nestedList = ref([])
 function onDragOver(event) {
+  console.log('start', event)
   event.preventDefault()
   if (event.dataTransfer) {
     event.dataTransfer.dropEffect = 'move'
@@ -55,40 +56,42 @@ onNodeDrag(({ intersections }) => {
 
 function onDrop(event) {
   const type = event.dataTransfer?.getData('application/vueflow')
-  let parentNode = null
-  const { left, top } = vueFlowRef.value.getBoundingClientRect()
-  if (intersectingList.value) { 
-    parentNode = intersectingList.value.find(el => el.type === 'timeline')
+  if (type) {
+    let parentNode = null
+    const { left, top } = vueFlowRef.value.getBoundingClientRect()
+    if (intersectingList.value) { 
+      parentNode = intersectingList.value.find(el => el.type === 'timeline')
+    }
+    const position = project({
+      x: event.clientX - left,
+      y: event.clientY - top,
+    })
+    const newNode = {
+      id: getId(),
+      type,
+      position,
+      label: `${type} node`,
+      parentNode: parentNode ? parentNode.id : '',
+      extent: 'parent',
+    }
+  
+    addNodes([newNode])
+  
+    // align node position after drop, so it's centered to the mouse
+    nextTick(() => {
+      const node = findNode(newNode.id)
+      const stop = watch(
+        () => node.dimensions,
+        (dimensions) => {
+          if (dimensions.width > 0 && dimensions.height > 0) {
+            node.position = { x: node.position.x - node.dimensions.width / 2, y: node.position.y - node.dimensions.height / 2 }
+            stop()
+          }
+        },
+        { deep: true, flush: 'post' },
+      )
+    })
   }
-  const position = project({
-    x: event.clientX - left,
-    y: event.clientY - top,
-  })
-  const newNode = {
-    id: getId(),
-    type,
-    position,
-    label: `${type} node`,
-    parentNode: parentNode ? parentNode.id : '',
-    extent: 'parent',
-  }
-
-  addNodes([newNode])
-
-  // align node position after drop, so it's centered to the mouse
-  nextTick(() => {
-    const node = findNode(newNode.id)
-    const stop = watch(
-      () => node.dimensions,
-      (dimensions) => {
-        if (dimensions.width > 0 && dimensions.height > 0) {
-          node.position = { x: node.position.x - node.dimensions.width / 2, y: node.position.y - node.dimensions.height / 2 }
-          stop()
-        }
-      },
-      { deep: true, flush: 'post' },
-    )
-  })
 }
 
 function findParent(node) {

@@ -6,7 +6,9 @@ import SvgIcon from '@/assets/SvgIcon.vue';
 
 defineProps(['data', 'label', 'id'])
 // const emit = defineEmits(["deleteNode"])
+
 let isShowInfo = ref(false)
+let isShowHint = ref(false)
 
 let commandInfo = [ { name: 'Объекты', value: 'Секция' },  { name: 'Компетенции', value: 'Бригадир запуска - выдача, слесарь' } ]
 </script>
@@ -28,14 +30,15 @@ let commandInfo = [ { name: 'Объекты', value: 'Секция' },  { name: 
       </div>
       <div class="command__footer">
         <div class="command__icons">
-          <div class="icon-wrapper">
+          <div @mouseover="isShowHint = true" @mouseleave="isShowHint = false">
             <SvgIcon name="touch"/>
           </div>
-          <div class="icon-wrapper">
-            <SvgIcon class="command__icon" name="submit"/>
-          </div>
+          <SvgIcon class="command__icon" name="submit"/>
         </div>
         <span class="command__time">00:10</span>
+      </div>
+      <div v-if="isShowHint" class="hint">
+        <span> Подтверждение кнопкой</span>
       </div>
     </div>
   </div>
@@ -51,7 +54,36 @@ let commandInfo = [ { name: 'Объекты', value: 'Секция' },  { name: 
 
 @import 'https://fonts.cdnfonts.com/css/manrope';
 
+.hint {
+  background: #191919;
+  width: 192px;
+  position: absolute;
+  bottom: -46%;
+  padding: 12px;
 
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 10px;
+  line-height: 18px;
+  display: flex;
+  align-items: center;
+  color: #FFFFFF;
+  z-index: 10000;
+}
+
+.hint::after {
+  position: absolute;
+  top: -30%;
+  left: 9%;
+  transform: rotate(180deg) scale(2);
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 7px solid #191919;
+}
 .vue-flow__minimap {
   transform: scale(75%);
   transform-origin: bottom right;
@@ -94,19 +126,6 @@ let commandInfo = [ { name: 'Объекты', value: 'Секция' },  { name: 
   cursor: pointer;
   max-width: 48px;
   max-height: 48px;
-}
-.icon-wrapper {
-  border: 1px solid white;
-  margin-right: 12px;
-  height: 24px;
-  width: 24px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-sizing: border-box;
-}
-.icon-wrapper:hover {
-  border: 1px solid black;
 }
 .command__main {
   transition: all 1s ease-out;
