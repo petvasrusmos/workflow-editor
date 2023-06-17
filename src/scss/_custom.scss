@@ -1,0 +1,11 @@
+@import 'variables';
+@import 'bootstrap/scss/bootstrap';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+//@import "vue-select/src/scss/vue-select.scss";
+// Vue Select
+@import 'vue-select/dist/vue-select.css';
+
+.dropdown-menu {
+	//width: 220px;
+	backdrop-filter: blur(5px);
+}

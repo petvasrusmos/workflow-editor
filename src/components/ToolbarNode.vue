@@ -1,11 +1,13 @@
 <script setup>
 import { Handle, Position } from '@vue-flow/core'
 // import { NodeToolbar } from '@vue-flow/node-toolbar'
-import { defineProps, ref } from 'vue'
+import { defineProps, ref, defineEmits } from 'vue'
 import SvgIcon from '@/assets/SvgIcon.vue';
+import { Collapse } from 'vue-collapsed'
 
-defineProps(['data', 'label', 'id'])
-// const emit = defineEmits(["deleteNode"])
+const emit = defineEmits(['deleteNode'])
+
+defineProps(['data', 'label', 'id', 'isChild'])
 
 let isShowInfo = ref(false)
 let isShowHint = ref(false)
@@ -14,31 +16,39 @@ let commandInfo = [ { name: 'Объекты', value: 'Секция' },  { name: 
 </script>
 
 <template>
-  <div @mouseover="isShowInfo = true" @mouseleave="isShowInfo = false" class="command__main" style=" max-width: 380px; width: 360px;">
-    <div @mouseover="isShowInfo = true" @mouseleave="isShowInfo = false" v-if="isShowInfo" class="close-wrapper">
-      <SvgIcon name="close"/>
-    </div>
-    <div class="command">
-      <div class="command__label">
-        {{ label ? label : 'Проверка комплектности после СО' }} {{ id }}
+  <div @mouseover="isShowInfo = true" @mouseleave="isShowInfo = false" class="command__wrapper">
+    <Transition name="close-fade">
+      <div v-if="isShowInfo && !isChild" @click="emit('deleteNode', id)" class="close-wrapper">
+        <SvgIcon name="close"/>
       </div>
-      <div v-if="isShowInfo" class="command__info-wrapper">
-        <div class="command__info" v-for="(info, index) in commandInfo" :key="index + info.name">
-          <div class="info__name">{{ info.name }}</div>
-          <div class="info__value">{{ info.value }}</div>
+    </Transition>
+    <div class="command__main" style=" max-width: 380px; width: 360px;">
+      <div class="command">
+        <div class="command__label">
+          {{ label ? label : 'Проверка комплектности после СО' }} {{ id }}
         </div>
-      </div>
-      <div class="command__footer">
-        <div class="command__icons">
-          <div @mouseover="isShowHint = true" @mouseleave="isShowHint = false">
-            <SvgIcon name="touch"/>
+        <Collapse :when="isShowInfo" class="my-class">
+          <Transition name="slide-fade">
+            <div v-if="isShowInfo" class="command__info-wrapper">
+              <div class="command__info" v-for="(info, index) in commandInfo" :key="index + info.name">
+                <div class="info__name">{{ info.name }}</div>
+                <div class="info__value">{{ info.value }}</div>
+              </div>
+            </div>
+          </Transition>
+        </Collapse>
+        <div class="command__footer">
+          <div class="command__icons">
+            <div @mouseover="isShowHint = true" @mouseleave="isShowHint = false">
+              <SvgIcon name="touch"/>
+            </div>
+            <SvgIcon class="command__icon" name="submit"/>
           </div>
-          <SvgIcon class="command__icon" name="submit"/>
+          <span class="command__time">00:10</span>
         </div>
-        <span class="command__time">00:10</span>
-      </div>
-      <div v-if="isShowHint" class="hint">
-        <span> Подтверждение кнопкой</span>
+        <div v-if="isShowHint" class="hint">
+          <span> Подтверждение кнопкой</span>
+        </div>
       </div>
     </div>
   </div>
@@ -54,6 +64,45 @@ let commandInfo = [ { name: 'Объекты', value: 'Секция' },  { name: 
 
 @import 'https://fonts.cdnfonts.com/css/manrope';
 
+.close-fade-enter-active {
+  transition: 1s ease;
+  animation: appearClose .3s;
+}
+@keyframes appearClose {
+ 0% {
+  opacity: 0;
+  transform: translateX(100);
+ }
+ 50% {
+  opacity: 0;
+ }
+ 100% {
+  opacity: 1;
+ }
+}
+.slide-fade-enter-active {
+  transition: all .1s ease;
+  opacity: 0;
+}
+.slide-fade-leave-active {
+  transition: all .8s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+.slide-fade-enter
+{
+  transform: translateX(10px);
+  opacity: 1;
+}
+.my-class {
+  transition: height 100ms cubic-bezier(0.3, 0, 0.6, 1);
+  transform: translateX(10px);
+}
+.slide-fade-leave-active {
+  transition: all .3s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+.slide-fade-enter {
+  transform: translateX(10px);
+  opacity: 0;
+}
 .hint {
   background: #191919;
   width: 192px;
@@ -115,31 +164,34 @@ let commandInfo = [ { name: 'Объекты', value: 'Секция' },  { name: 
   align-items: center;
 }
 .close-wrapper {
-  position: absolute;
-  right: -12.5%;
   border: 2px solid #E10019;
-  background: white;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 7px;
   cursor: pointer;
   max-width: 48px;
-  max-height: 48px;
+  max-height: 24px;
+  margin-left: 2px;
+}
+
+.command__wrapper {
+  display: flex;
+  justify-content: space-between;
+  flex-flow: row-reverse;
+  background: #ffffff00;
 }
 .command__main {
+  max-width: 360px;
   transition: all 1s ease-out;
   background: #2828D2;
   color: white;
-  display: flex;
-  justify-content: flex-start;
-  flex-flow: column;
   box-sizing: border-box;
 }
 .command__info-wrapper {
   display: flex;
   flex-flow: column;
-  margin-left: 18px;  
+  margin-left: 18px;
 }
 .command__info {
   font-family: 'Manrope';

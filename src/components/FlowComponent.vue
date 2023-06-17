@@ -3,7 +3,7 @@
 import { VueFlow, useVueFlow } from '@vue-flow/core'
 // import  distributeRectangles from './distribution-functions.js'
 import { distributeRectanglesTowardRight } from './distribution-functions.js' 
-import { nextTick, watch } from 'vue'
+import { nextTick } from 'vue'
 // import { Background } from '@vue-flow/background'
 // import { Controls } from '@vue-flow/controls'
 // import { MiniMap } from '@vue-flow/minimap'
@@ -11,9 +11,9 @@ import { ref } from 'vue'
 import { initialElements } from './initial-elements.js'
 import ToolbarNode from './ToolbarNode.vue'
 import ResizableNode from './ResizableNode.vue'
+import NodeSettingsBar from './NodeSettingsBar.vue'
 import SideBar from './SideBar'
 import { defineProps } from 'vue';
-
 
 const elements = ref(initialElements)
 defineProps(['label'])
@@ -21,7 +21,7 @@ let id = 0
 function getId() {
   return `dndnode_${id++}`
 }
-const { findNode, onConnect, addEdges, onNodeDrag, onNodeDragStop, getNodes, getEdges, addNodes, project, vueFlowRef } = useVueFlow({
+const { findNode, onConnect, addEdges, onNodeDrag, onNodeDragStop, getNodes, getEdges, addNodes, project, vueFlowRef, applyNodeChanges, applyEdgeChanges} = useVueFlow({
   nodes: [
     {
       id: '1',
@@ -32,11 +32,8 @@ const { findNode, onConnect, addEdges, onNodeDrag, onNodeDragStop, getNodes, get
   ],
 })
 
-let intersectingList = ref([])
-
 const nestedList = ref([])
 function onDragOver(event) {
-  console.log('start', event)
   event.preventDefault()
   if (event.dataTransfer) {
     event.dataTransfer.dropEffect = 'move'
@@ -44,105 +41,163 @@ function onDragOver(event) {
 }
 onConnect((params) => addEdges([params])),
 onNodeDrag(({ intersections }) => {
-  intersectingList = [...intersections]
-  const intersectionsWithoutTimeline = intersections.filter(el => (el.type !== 'timeline') && (el.type !== 'child'))
+  const intersectionsWithoutTimeline = intersections.filter(el => (el.type !== 'timeline'))
   const intersectionIds = intersectionsWithoutTimeline.map((intersection) => intersection.id)
-  // elements.value.findIndex(el => el.target === n.)
   getNodes.value.forEach((n) => {
     const isIntersecting = (intersectionIds.includes(n.id))
-    n.class = (isIntersecting && n.type !== 'child') ? 'intersecting' : ''
+    n.class = isIntersecting ? 'intersecting' : ''
   })
 })
 
+const createNode = (type, targetNodeId, position) => {
+  const nodeId = getId()
+  const newNode = {
+    id: nodeId,
+    type,
+    position,
+    label: `${type} node`,
+    parentNode: '7',
+    extent: 'parent',
+  }
+  addNodes([
+    newNode
+  ])
+  nextTick(() => {
+    let node = findNode(newNode.id)
+    // const stop = watch(
+    //   () => node.dimensions,
+    //   (dimensions) => {
+    //     if (dimensions.width > 0 && dimensions.height > 0) {
+    //       node.position = { x: node.position.x - node.dimensions.width / 2, y: node.position.y - node.dimensions.height / 2 }
+    //       stop()
+    //     }
+    //   },
+    //   { deep: true, flush: 'post' },
+    // )
+    if (targetNodeId && targetNodeId !== '7') {
+      let alreadyConnected = []
+      getEdges.value.forEach(edge => { 
+       if (edge.source === targetNodeId) alreadyConnected.push(findNode(edge.target))
+      })
+      if(alreadyConnected.length) {
+        setTimeout(() => {
+          insertNodeBetween(findNode(targetNodeId), node)
+        }, 1);
+      }
+      addEdges([
+        {
+          id: `e${targetNodeId}-${nodeId}`,
+          type: 'smoothstep',
+          source: targetNodeId,
+          target: newNode.id,
+          zIndex: 22,
+        },
+      ])
+      findStartNode(node)
+    }
+  })
+}
 function onDrop(event) {
   const type = event.dataTransfer?.getData('application/vueflow')
+  console.log(type, 'type')
   if (type) {
-    let parentNode = null
+    const targetNodeId = (event.target)?.closest('.vue-flow__node')?.getAttribute('data-id')
     const { left, top } = vueFlowRef.value.getBoundingClientRect()
-    if (intersectingList.value) { 
-      parentNode = intersectingList.value.find(el => el.type === 'timeline')
-    }
     const position = project({
-      x: event.clientX - left,
-      y: event.clientY - top,
-    })
-    const newNode = {
-      id: getId(),
-      type,
-      position,
-      label: `${type} node`,
-      parentNode: parentNode ? parentNode.id : '',
-      extent: 'parent',
-    }
+        x: event.clientX - left,
+        y: event.clientY - top,
+      })
+    createNode(type || 'custom', targetNodeId, position)
+    // let parentNode = null
+    // if (intersectingList.value) { 
+    //   parentNode = intersectingList.value.find(el => el.type === 'timeline')
+    // }
+    // const position = project({
+    //   x: event.clientX - left,
+    //   y: event.clientY - top,
+    // })
+    // const newNode = {
+    //   id: getId(),
+    //   type,
+    //   position,
+    //   label: `${type} node`,
+    //   parent: parentNode ? parentNode.id : '',
+    //   extent: 'parent',
+    // }
   
-    addNodes([newNode])
+    // addNodes([newNode])
   
-    // align node position after drop, so it's centered to the mouse
-    nextTick(() => {
-      const node = findNode(newNode.id)
-      const stop = watch(
-        () => node.dimensions,
-        (dimensions) => {
-          if (dimensions.width > 0 && dimensions.height > 0) {
-            node.position = { x: node.position.x - node.dimensions.width / 2, y: node.position.y - node.dimensions.height / 2 }
-            stop()
-          }
-        },
-        { deep: true, flush: 'post' },
-      )
-    })
+    // // align node position after drop, so it's centered to the mouse
+    // nextTick(() => {
+    //   const node = findNode(newNode.id)
+    //   const stop = watch(
+    //     () => node.dimensions,
+    //     (dimensions) => {
+    //       if (dimensions.width > 0 && dimensions.height > 0) {
+    //         node.position = { x: node.position.x - node.dimensions.width / 2, y: node.position.y - node.dimensions.height / 2 }
+    //         stop()
+    //       }
+    //     },
+    //     { deep: true, flush: 'post' },
+    //   )
+    // })
   }
 }
 
-function findParent(node) {
-  const edge = elements.value.find((element) => (element.target === node.id) )
-  return findNode(edge.source)
-}
 const gap = 50
 
 function insertNodeBetween (leftNode, newNode) {
   let rightNode = null
-  elements.value.push({id: `e${leftNode.id}-${newNode.id}`, source: leftNode.id, target: newNode.id, type: 'smoothstep', zIndex: 1, })
-  elements.value.forEach((el, index) => {
+  getEdges.value.forEach((el) => {
     if (leftNode.id === el.source) {
       rightNode = findNode(el.target)
-      elements.value.push({id: `e${newNode.id}-${rightNode.id}`, source: newNode.id, target: rightNode.id, type: 'smoothstep', zIndex: 1, })
-      elements.value.splice(index, 1)
+      applyEdgeChanges([{ type: 'remove', id: `e${leftNode.id}-${rightNode.id}` }])
+      console.log(newNode)
+      addEdges([{id: `e${newNode.id}-${rightNode.id}`, source: newNode.id, target: rightNode.id, type: 'smoothstep', zIndex: 5, }])
+      addEdges([{id: `e${leftNode.id}-${newNode.id}`, source: leftNode.id, target: newNode.id, type: 'smoothstep', zIndex: 5 }])
+      findStartNode(leftNode, 'insert')
     }
   })
-  findStartNode(leftNode, 'insert')
+  console.log(getEdges.value, 'edges')
 }
 function updateNodesRow(node) {
+  count = 0
   let nodesRow = findNodesRow(node, [])
-  let y = node.position.y
+  // let y = node.position.y
   const connectedRects = []
   nodesRow.forEach(el => {
     connectedRects.push({ height: el.dimensions.height, width: el.dimensions.width, x: el.position.x, y: el.position.x, id: el.id })
   })
   const distributedRects = distributeRectanglesTowardRight(connectedRects, gap)
-  distributedRects.forEach(el => {
+  distributedRects.forEach((el) => {
     let node = findNode(el.id)
     node.position.x = el.x
-    node.position.y = y
+    let timiline = findNode(node.parentNode)
+    node.position.y = timiline.position.y + timiline.dimensions.height / 2 - 200
   })
 }
-function findStartNode(node, comment) {
-  let edge = elements.value.find(edge => (edge.target === node.id))
-  if (edge) {
+function findStartNode(node) {
+  let edge = getEdges.value.find(edge => (edge.target === node.id))
+  if (edge && (node.id !== edge.source)) {
     let source = findNode(edge.source)
-    findStartNode(source, comment)
+    findStartNode(source)
   } else {
     updateNodesRow(node)
   }
 }
+let count = 0
 function findNodesRow(node, nodesRow) {
-  let edge = elements.value.find(edge => (edge.source === node.id))
-  nodesRow.push(node)
+  count++
+  console.log(count)
+  let oldArray = [...nodesRow]
+  oldArray.push(node)
+  let edge = getEdges.value.find(edge => (edge.source === node.id))
+  let updatedNodesRow = []
   if (edge) {
     let target = findNode(edge.target)
-    nodesRow = findNodesRow(target, nodesRow)
+    updatedNodesRow = [...findNodesRow(target, oldArray)]
   }
-  return nodesRow
+  return updatedNodesRow.length ? updatedNodesRow : oldArray
 }
 // function SetChildrenPosition(parent) {
 //   const connectedNodes = []
@@ -179,8 +234,8 @@ onNodeDragStop((e) => {
       if(alreadyConnected.length) {
         insertNodeBetween(n, e.node)
       }
-      elements.value.push({id: `e${n.id}-${e.node.id}`, source: n.id, target: e.node.id, type: 'smoothstep', zIndex: 1, })
-      findStartNode(n, 'standard')
+      addEdges([{id: `e${n.id}-${e.node.id}`, source: n.id, target: e.node.id, type: 'smoothstep', zIndex: 1 }])
+      findStartNode(n)
       // SetChildrenPosition(n)
       n.class = ''
     }
@@ -194,27 +249,24 @@ const dark = ref(false)
 
 function deleteNode (id) {
   let node = findNode(id) 
-  if (node.type === 'timeline' | 'child') return
-  let edgeIndex = -1
+  if (node.type === 'timeline') return
+  let edgeId = null
   let newTarget = null
   let newSource = null
-  elements.value.forEach((el, index) => { 
+  getEdges.value.forEach((el) => { 
     if (id === el.target) {
-      edgeIndex = index
+      edgeId = el.id
       newSource = findNode(el.source)
     }
     if (id === el.source) newTarget = findNode(el.target) 
   })
-  if (edgeIndex !== -1) {
-    const parent = findParent(node)
-    console.log(parent)
+  if (edgeId) {
     // SetChildrenPosition(parent)
-    elements.value.splice(edgeIndex, 1)
+    applyEdgeChanges([{ type: 'remove', id: edgeId }])
   } 
-  const nodeIndex = elements.value.findIndex(el => id === el.id)
-  elements.value.splice(nodeIndex, 1)  
+  applyNodeChanges([{ type: 'remove', id: id }])
   if(newSource && newTarget) {
-    elements.value.push({id: `e${newSource.id}-${newTarget.id}`, source: newSource.id, target: newTarget.id, type: 'smoothstep', zIndex: 1, })
+    addEdges([{id: `e${newSource.id}-${newTarget.id}`, source: newSource.id, target: newTarget.id, type: 'smoothstep', zIndex: 1, }])
     findStartNode(newSource)
   }
   
@@ -225,6 +277,7 @@ function deleteNode (id) {
 <template>
   <div class="main-wrapper">
     <div class="main" @drop="onDrop">
+      <SideBar :label="label"/>
       <VueFlow @dragover="onDragOver" v-model="elements" :class="{ dark }" class="basicflow" :default-viewport="{ zoom: 1.5 }" :min-zoom="0.2" :max-zoom="4">
         <template #node-resizable="resizableNodeProps">
           <ResizableNode :label="resizableNodeProps.label" :list="nestedList" />
@@ -233,7 +286,7 @@ function deleteNode (id) {
           <ToolbarNode @deleteNode="deleteNode" :data="nodeProps" :id="nodeProps.id"/>
         </template>
       </VueFlow>
-      <SideBar :label="label"/>
+      <NodeSettingsBar :model="{}"/>
     </div>
   </div>
 </template>

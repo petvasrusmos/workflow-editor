@@ -1,17 +1,17 @@
 <template>
   <FlowComponent label="Timeline 1" msg="Welcome to Your Vue.js App"/>
-  <!-- <HelloWorld label="Timeline 2" style="margin-top: 10px;" /> -->
 </template>
 
-<script>
+<script lang="ts">
+import { Options, Vue } from 'vue-class-component';
 import FlowComponent from './components/FlowComponent.vue'
 
-export default {
-  name: 'App',
+@Options({
   components: {
-    FlowComponent,
-  }
-}
+    FlowComponent
+  },
+})
+export default class App extends Vue {}
 </script>
 
 <style>

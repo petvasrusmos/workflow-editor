@@ -25,7 +25,7 @@ let cards = ref([1, 2, 3, 4, 5])
     >
       <template #item="{element}">
         <div class="task__node">
-          <ToolbarNode :label="element"/>
+          <ToolbarNode :isChild="true" :label="element"/>
         </div>
       </template>
     </draggable>
