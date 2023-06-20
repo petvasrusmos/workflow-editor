@@ -1,4 +1,8 @@
+@use 'vuetify' with (
+  $utilities: false,
+  $color-pack: false,
+);
 @import "custom";
+@import "footer";
 @import "dashboard";
 @import "login";
-@import "footer";

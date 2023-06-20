@@ -13,6 +13,8 @@ function onDragStart(event, nodeType) {
 
 <template>
   <aside class="aside-wrapper">
+    <v-time-picker></v-time-picker>
+
     <div class="aside">
       <h3 class="description">{{ label }}</h3>
       <div class="nodes">
@@ -20,7 +22,7 @@ function onDragStart(event, nodeType) {
         <div :draggable="true" @dragstart="onDragStart($event, 'toolbar')" class="command__main node" style=" max-width: 350px; width: 330px;">
           <div class="command">
             <div class="command__label">
-              {{ label ? label : 'Проверка комплектности после СО' }} {{ id }}
+              <!-- {{ label ? label : 'Проверка комплектности после СО' }} {{ id }} -->
             </div>
             <div class="command__footer">
               <div class="command__icons">
@@ -29,14 +31,14 @@ function onDragStart(event, nodeType) {
                 </div>
                 <SvgIcon class="command__icon" name="submit"/>
               </div>
-              <span class="command__time">00:10</span>
+              <span class="command__time">--:--</span>
             </div>
           </div>
         </div>
         <div :draggable="true" @dragstart="onDragStart($event, 'toolbar')" class="command__main node" style=" max-width: 350px; width: 330px;">
           <div class="command">
             <div class="command__label">
-              {{ label ? label : 'Проверка комплектности после СО' }} {{ id }}
+              <!-- {{ label ? label : 'Проверка комплектности после СО' }} {{ id }} -->
             </div>
             <div class="command__footer">
               <div class="command__icons">
@@ -45,148 +47,18 @@ function onDragStart(event, nodeType) {
                 </div>
                 <SvgIcon class="command__icon" name="submit"/>
               </div>
-              <span class="command__time">00:10</span>
+              <span class="command__time">--:--</span>
             </div>
           </div>
         </div>
-        <div :draggable="true" @dragstart="onDragStart($event, 'toolbar')" class="command__main node" style=" max-width: 350px; width: 330px;">
-          <div class="command">
-            <div class="command__label">
-              {{ label ? label : 'Проверка комплектности после СО' }} {{ id }}
-            </div>
-            <div class="command__footer">
-              <div class="command__icons">
-                <div>
-                  <SvgIcon name="touch"/>
-                </div>
-                <SvgIcon class="command__icon" name="submit"/>
-              </div>
-              <span class="command__time">00:10</span>
-            </div>
-          </div>
-        </div>
-        <div :draggable="true" @dragstart="onDragStart($event, 'toolbar')" class="command__main node" style=" max-width: 350px; width: 330px;">
-          <div class="command">
-            <div class="command__label">
-              {{ label ? label : 'Проверка комплектности после СО' }} {{ id }}
-            </div>
-            <div class="command__footer">
-              <div class="command__icons">
-                <div>
-                  <SvgIcon name="touch"/>
-                </div>
-                <SvgIcon class="command__icon" name="submit"/>
-              </div>
-              <span class="command__time">00:10</span>
-            </div>
-          </div>
-        </div>
-        <div :draggable="true" @dragstart="onDragStart($event, 'toolbar')" class="command__main node" style=" max-width: 350px; width: 330px;">
-          <div class="command">
-            <div class="command__label">
-              {{ label ? label : 'Проверка комплектности после СО' }} {{ id }}
-            </div>
-            <div class="command__footer">
-              <div class="command__icons">
-                <div>
-                  <SvgIcon name="touch"/>
-                </div>
-                <SvgIcon class="command__icon" name="submit"/>
-              </div>
-              <span class="command__time">00:10</span>
-            </div>
-          </div>
-        </div>
-        <div :draggable="true" @dragstart="onDragStart($event, 'toolbar')" class="command__main node" style=" max-width: 350px; width: 330px;">
-          <div class="command">
-            <div class="command__label">
-              {{ label ? label : 'Проверка комплектности после СО' }} {{ id }}
-            </div>
-            <div class="command__footer">
-              <div class="command__icons">
-                <div>
-                  <SvgIcon name="touch"/>
-                </div>
-                <SvgIcon class="command__icon" name="submit"/>
-              </div>
-              <span class="command__time">00:10</span>
-            </div>
-          </div>
-        </div>
-        <div :draggable="true" @dragstart="onDragStart($event, 'toolbar')" class="command__main node" style=" max-width: 350px; width: 330px;">
-          <div class="command">
-            <div class="command__label">
-              {{ label ? label : 'Проверка комплектности после СО' }} {{ id }}
-            </div>
-            <div class="command__footer">
-              <div class="command__icons">
-                <div>
-                  <SvgIcon name="touch"/>
-                </div>
-                <SvgIcon class="command__icon" name="submit"/>
-              </div>
-              <span class="command__time">00:10</span>
-            </div>
-          </div>
-        </div>
-        <div :draggable="true" @dragstart="onDragStart($event, 'toolbar')" class="command__main node" style=" max-width: 350px; width: 330px;">
-          <div class="command">
-            <div class="command__label">
-              {{ label ? label : 'Проверка комплектности после СО' }} {{ id }}
-            </div>
-            <div class="command__footer">
-              <div class="command__icons">
-                <div>
-                  <SvgIcon name="touch"/>
-                </div>
-                <SvgIcon class="command__icon" name="submit"/>
-              </div>
-              <span class="command__time">00:10</span>
-            </div>
-          </div>
-        </div>
-        <div :draggable="true" @dragstart="onDragStart($event, 'toolbar')" class="command__main node" style=" max-width: 350px; width: 330px;">
-          <div class="command">
-            <div class="command__label">
-              {{ label ? label : 'Проверка комплектности после СО' }} {{ id }}
-            </div>
-            <div class="command__footer">
-              <div class="command__icons">
-                <div>
-                  <SvgIcon name="touch"/>
-                </div>
-                <SvgIcon class="command__icon" name="submit"/>
-              </div>
-              <span class="command__time">00:10</span>
-            </div>
-          </div>
-        </div>
-        <div :draggable="true" @dragstart="onDragStart($event, 'toolbar')" class="command__main node" style=" max-width: 350px; width: 330px;">
-          <div class="command">
-            <div class="command__label">
-              {{ label ? label : 'Проверка комплектности после СО' }} {{ id }}
-            </div>
-            <div class="command__footer">
-              <div class="command__icons">
-                <div>
-                  <SvgIcon name="touch"/>
-                </div>
-                <SvgIcon class="command__icon" name="submit"/>
-              </div>
-              <span class="command__time">00:10</span>
-            </div>
-          </div>
-        </div>                   
-        <div class="vue-flow__node-default node" :draggable="true" @dragstart="onDragStart($event, 'default')">Default Node</div>
-        <div class="vue-flow__node-output node" :draggable="true" @dragstart="onDragStart($event, 'output')">Output Node</div>
       </div>
       </div>
   </aside>
 </template>
 <style>
 .aside-wrapper {
-  border-left: 1px solid rgba(42, 40, 40, 0.419);
-  width: 30%;
+  border-right: 1px solid rgba(42, 40, 40, 0.419);
+  width: 25%;
   max-height: 80vh;
   overflow-y: scroll;
 }

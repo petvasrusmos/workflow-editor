@@ -1,26 +1,26 @@
 <template>
-  <FlowComponent label="Timeline 1" msg="Welcome to Your Vue.js App"/>
+  <v-app>
+    <v-main>
+      <FlowComponent/>
+    </v-main>
+  </v-app>
 </template>
 
 <script lang="ts">
-import { Options, Vue } from 'vue-class-component';
+import { defineComponent } from 'vue'
 import FlowComponent from './components/FlowComponent.vue'
 
-@Options({
+export default defineComponent({
+  name: 'App',
+
   components: {
     FlowComponent
   },
-})
-export default class App extends Vue {}
-</script>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
+  data () {
+    return {
+      //
+    }
+  },
+})
+</script>

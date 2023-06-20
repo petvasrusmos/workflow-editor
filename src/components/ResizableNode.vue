@@ -1,18 +1,30 @@
 <script setup>
 import { Handle, Position } from '@vue-flow/core'
-import { NodeResizer } from '@vue-flow/node-resizer'
-import { ref, defineProps } from 'vue'
+import SvgIcon from '@/assets/SvgIcon.vue';
+
+// import { NodeResizer } from '@vue-flow/node-resizer'
+import { ref, defineProps, defineEmits } from 'vue'
 import Draggable from 'vuedraggable'
 import ToolbarNode from './ToolbarNode.vue'
 
-defineProps(['label', 'list'])
+defineProps(['label', 'list', 'isSelected', 'id'])
+const emit = defineEmits(['deleteNode'])
 let cards = ref([1, 2, 3, 4, 5])
+
+function deleteNode(id) {
+  let index = cards.value.findIndex(el => el === id)
+  cards.value.splice(index, 1)
+}
 </script>
 
 <template>
-  <div class="task">
-    <NodeResizer min-width="384" max-width="384" min-height="80" max-height="1500" />
-
+  <div :class="{ 'isSelected': isSelected }" class="task">
+    <Transition name="close-fade">
+      <div v-if="isSelected" @click="emit('deleteNode', id)" class="close-wrapper resizer-close">
+        <SvgIcon name="close"/>
+      </div>
+    </Transition>
+    <!-- <NodeResizer min-width="384" max-width="384" min-height="80" max-height="1500" /> -->
     <Handle type="target" :position="Position.Left" />
     <div class="task__label" style="padding: 12px"> Выдача локомотива </div>
     <draggable 
@@ -23,9 +35,9 @@ let cards = ref([1, 2, 3, 4, 5])
       drag-class="drag"
       ghost-class="ghost"
     >
-      <template #item="{element}">
+      <template #item="{element} ">
         <div class="task__node">
-          <ToolbarNode :isChild="true" :label="element"/>
+          <ToolbarNode @deleteNode="deleteNode(element)" :isChild="true" :label="element"/>
         </div>
       </template>
     </draggable>
@@ -63,7 +75,6 @@ let cards = ref([1, 2, 3, 4, 5])
   height: 100%;
   background: #39393A;
   z-index: 0;
-  overflow-y: hidden;
 }
 
 .task__list {
@@ -84,5 +95,10 @@ let cards = ref([1, 2, 3, 4, 5])
 
 .ghost > div {
   visibility: hidden;
+}
+.resizer-close {
+  position: absolute;
+  right: -12.5%;
+  top: -0.2%
 }
 </style>

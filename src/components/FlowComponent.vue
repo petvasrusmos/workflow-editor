@@ -11,9 +11,15 @@ import { ref } from 'vue'
 import { initialElements } from './initial-elements.js'
 import ToolbarNode from './ToolbarNode.vue'
 import ResizableNode from './ResizableNode.vue'
-import NodeSettingsBar from './NodeSettingsBar.vue'
+// import NodeSettingsBar from './NodeSettingsBar.vue'
+import NodeBar from './NodeBar.vue'
 import SideBar from './SideBar'
-import { defineProps } from 'vue';
+
+import { defineProps, computed } from 'vue';
+
+const selectedNode = computed(() => {
+  return getNodes.value.find(node => node.selected)
+})
 
 const elements = ref(initialElements)
 defineProps(['label'])
@@ -21,7 +27,7 @@ let id = 0
 function getId() {
   return `dndnode_${id++}`
 }
-const { findNode, onConnect, addEdges, onNodeDrag, onNodeDragStop, getNodes, getEdges, addNodes, project, vueFlowRef, applyNodeChanges, applyEdgeChanges} = useVueFlow({
+const { findNode, onNodeClick, onConnect, addEdges, onNodeDrag, onNodeDragStop, getNodes, getEdges, addNodes, project, vueFlowRef, applyNodeChanges, applyEdgeChanges} = useVueFlow({
   nodes: [
     {
       id: '1',
@@ -32,7 +38,6 @@ const { findNode, onConnect, addEdges, onNodeDrag, onNodeDragStop, getNodes, get
   ],
 })
 
-const nestedList = ref([])
 function onDragOver(event) {
   event.preventDefault()
   if (event.dataTransfer) {
@@ -47,6 +52,11 @@ onNodeDrag(({ intersections }) => {
     const isIntersecting = (intersectionIds.includes(n.id))
     n.class = isIntersecting ? 'intersecting' : ''
   })
+})
+
+onNodeClick(({ node }) => {
+  node.data.isClicked = !node.data.isClicked
+  console.log('node.id', node)
 })
 
 const createNode = (type, targetNodeId, position) => {
@@ -95,6 +105,7 @@ const createNode = (type, targetNodeId, position) => {
       ])
       findStartNode(node)
     }
+    node.selected = true
   })
 }
 function onDrop(event) {
@@ -144,7 +155,7 @@ function onDrop(event) {
   }
 }
 
-const gap = 50
+const gap = 100
 
 function insertNodeBetween (leftNode, newNode) {
   let rightNode = null
@@ -223,7 +234,7 @@ function findNodesRow(node, nodesRow) {
 //   }
 // }
 onNodeDragStop((e) => {
-  getNodes.value.forEach((n) => {
+  getNodes.value.find((n) => {
     // const connectedNodes = []
     if (n.class === 'intersecting') {
       // looking for another edge with this node for define is this would be a parallel or serial positioning
@@ -247,6 +258,10 @@ onConnect((params) => addEdges([params]))
 
 const dark = ref(false)
 
+function saveNode (id) {
+  let node = findNode(id) 
+  node.selected = false
+}
 function deleteNode (id) {
   let node = findNode(id) 
   if (node.type === 'timeline') return
@@ -278,15 +293,40 @@ function deleteNode (id) {
   <div class="main-wrapper">
     <div class="main" @drop="onDrop">
       <SideBar :label="label"/>
-      <VueFlow @dragover="onDragOver" v-model="elements" :class="{ dark }" class="basicflow" :default-viewport="{ zoom: 1.5 }" :min-zoom="0.2" :max-zoom="4">
+      <VueFlow
+        @dragover="onDragOver"
+        v-model="elements"
+        :class="{ dark }"
+        class="basicflow"
+        :default-viewport="{ zoom: 1.5 }"
+        :min-zoom="0.2"
+        :max-zoom="4"
+      >
         <template #node-resizable="resizableNodeProps">
-          <ResizableNode :label="resizableNodeProps.label" :list="nestedList" />
+          <ResizableNode
+            :id="resizableNodeProps.id"
+            :label="resizableNodeProps.label"
+            :list="nestedList"
+            :isSelected="resizableNodeProps.selected"
+            @deleteNode="deleteNode"
+          />
         </template>
         <template #node-toolbar="nodeProps">
-          <ToolbarNode @deleteNode="deleteNode" :data="nodeProps" :id="nodeProps.id"/>
+          <ToolbarNode
+            @deleteNode="deleteNode"
+            :data="nodeProps.data"
+            :isSelected="nodeProps.selected"
+            :id="nodeProps.id"
+          />
         </template>
       </VueFlow>
-      <NodeSettingsBar :model="{}"/>
+        <NodeBar
+          :node="selectedNode ? selectedNode.data : ''"
+          :id="selectedNode ? selectedNode.id : null"
+          class="node-bar"
+          @deleteNode="deleteNode"
+          @saveNode="saveNode"
+        />
     </div>
   </div>
 </template>
@@ -294,10 +334,11 @@ function deleteNode (id) {
 .main-wrapper {
   display: flex;
   justify-content: center;
+  overflow: hidden;
 }
 .main {
   display: flex;
-  width: 75%;
+  width: 85%;
   min-height: 80vh;
   border: 1px solid rgba(42, 40, 40, 0.419);
   border-radius: 12px;
@@ -320,6 +361,10 @@ body,
   height: 100%;
 }
 
+.node-bar {
+  transition: 300ms ease;
+  overflow: hidden;
+}
 .vue-flow__minimap {
   transform: scale(75%);
   transform-origin: bottom right;
@@ -329,4 +374,35 @@ body,
 .basicflow.dark{background:#57534e;color:#fffffb}.basicflow.dark .vue-flow__node{background:#292524;color:#fffffb}.basicflow.dark .vue-flow__controls .vue-flow__controls-button{background:#292524;fill:#fffffb;border-color:#fffffb}.basicflow.dark .vue-flow__edge-textbg{fill:#292524}.basicflow.dark .vue-flow__edge-text{fill:#fffffb}.basicflow .controls{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}.basicflow .controls button{padding:4px;border-radius:5px;font-weight:600;-webkit-box-shadow:0px 5px 10px 0px rgba(0,0,0,.3);box-shadow:0 5px 10px #0000004d;cursor:pointer;display:flex;justify-content:center;align-items:center}.basicflow .controls button:hover{transform:scale(102%);transition:.25s all ease}
 
 .basicflow.dark{background:#57534e;color:#fffffb}.basicflow.dark .vue-flow__node{background:#292524;color:#fffffb}.basicflow.dark .vue-flow__controls .vue-flow__controls-button{background:#292524;fill:#fffffb;border-color:#fffffb}.basicflow.dark .vue-flow__edge-textbg{fill:#292524}.basicflow.dark .vue-flow__edge-text{fill:#fffffb}.basicflow .controls{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}.basicflow .controls button{padding:4px;border-radius:5px;font-weight:600;-webkit-box-shadow:0px 5px 10px 0px rgba(0,0,0,.3);box-shadow:0 5px 10px #0000004d;cursor:pointer;display:flex;justify-content:center;align-items:center}.basicflow .controls button:hover{transform:scale(102%);transition:.25s all ease}
+
+.slide-enter-from {
+  transform: translateX(300px);
+}
+
+.slide-enter-active {
+  transition: all .3s ease-in;
+}
+
+.slide-leave-active {
+  transition: all .3s ease-in;
+}
+.slide-leave-to {
+  transform: translateX(300px);
+}
+
+
+.slide-two-enter {
+  transform: translateX(300px);
+}
+
+.slide-two-enter-active {
+  transition: all .3s ease-in;
+}
+
+.slide-two-leave-active {
+  transition: all .3s ease-in;
+}
+.slide-two-leave-to {
+  transform: translateX(-300px);
+}
 </style>

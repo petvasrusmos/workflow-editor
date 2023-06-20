@@ -4,6 +4,25 @@ const defaultNodeStyle = {
   border: 0,
   color: 'white',
 }
+
+const defaultData = {
+  title: 'Проверка комплектности после СО',
+	duration_minutes: null,
+	linked_objects: 'Секция',
+	linked_duties: 'Мастер приемки',
+	confirmations: [],
+  time: '',
+}
+
+export const linkedObjects = [
+  'Локомотив',
+  'Секция'
+]
+
+export const duties = [
+  'Сварщик 1 разряда',
+  'Мастер приемки'
+]
 /**
  * You can pass elements together as a v-model value
  * or split them up into nodes and edges and pass them to the `nodes` and `edges` props of Vue Flow (or useVueFlow composable)
@@ -14,7 +33,7 @@ export const initialElements = [
   // { id: '3', label: 'Node 3', position: { x: 25, y: 50 }, parentNode: '7', class: 'light', zIndex: 1, extent: 'parent'},
   // { id: '4', label: 'Node 4', position: { x: 50, y: 250 }, parentNode: '7', class: 'light', zIndex: 1, extent: 'parent' },
   // { id: '5', type: 'output', label: 'Node 5', position: { x: 300, y: 300 }, parentNode: '7', zIndex: 1, class: 'light', extent: 'parent' },
-  { id: '7', type: 'timeline', label: '', position: { x: 0, y: 0 }, width: 4000, height: 1000, zIndex: 0,  class: 'light', draggable: false, style: { background: '#C9C9C9' }, },
+  { id: '7', type: 'timeline', label: '',selectable: false, position: { x: 0, y: 0 }, width: 4000, height: 1000, zIndex: 0,  class: 'light', draggable: false, style: { background: '#C9C9C9' }, },
   // { id: '8', type: 'timeline', label: 'Procces 2', position: { x: 0, y: 500 }, width: 2000, height: 500, zIndex: 0,  class: 'light', draggable: false },
   // { id: '9', type: 'timeline', label: 'Procces 3', position: { x: 0, y: 1000 }, width: 2000, height: 500, zIndex: 0,  class: 'light', draggable: false },
   // { id: '6', type: 'output', label: 'Node 6', position: { x: 300, y: 400 }, extent: 'parent', parentNode: '7', class: 'light', zIndex: 1, width: 400, height: 35 },
@@ -36,7 +55,7 @@ export const initialElements = [
     id: '1',
     type: 'toolbar',
     label: 'toolbar bottom',
-    data: { toolbarPosition: Position.Bottom },
+    data: { toolbarPosition: Position.Bottom, ...defaultData },
     position: { x: 0, y: 0 },
     style: defaultNodeStyle,
     zIndex: 2,
@@ -47,7 +66,7 @@ export const initialElements = [
     id: '2',
     type: 'toolbar',
     label: 'toolbar bottom',
-    data: { toolbarPosition: Position.Bottom },
+    data: { toolbarPosition: Position.Bottom, ...defaultData },
     position: { x: 200, y: 300 },
     style: defaultNodeStyle,
     zIndex: 2,
@@ -58,7 +77,7 @@ export const initialElements = [
     id: '3',
     type: 'toolbar',
     label: 'toolbar bottom',
-    data: { toolbarPosition: Position.Bottom },
+    data: { toolbarPosition: Position.Bottom, ...defaultData },
     position: { x: 500, y: 500 },
     style: defaultNodeStyle,
     zIndex: 2,
@@ -69,7 +88,7 @@ export const initialElements = [
     id: '4',
     type: 'toolbar',
     label: 'toolbar bottom',
-    data: { toolbarPosition: Position.Bottom },
+    data: { toolbarPosition: Position.Bottom, ...defaultData },
     position: { x: 600, y: 0 },
     style: defaultNodeStyle,
     zIndex: 2,
@@ -81,7 +100,7 @@ export const initialElements = [
     id: '13',
     type: 'toolbar',
     label: 'toolbar bottom',
-    data: { toolbarPosition: Position.Bottom },
+    data: { toolbarPosition: Position.Bottom, ...defaultData },
     position: { x: 200, y: 0 },
     style: defaultNodeStyle,
     zIndex: 2,

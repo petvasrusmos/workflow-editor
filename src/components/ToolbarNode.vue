@@ -1,35 +1,48 @@
 <script setup>
 import { Handle, Position } from '@vue-flow/core'
 // import { NodeToolbar } from '@vue-flow/node-toolbar'
-import { defineProps, ref, defineEmits } from 'vue'
+import { defineProps, ref, defineEmits, computed } from 'vue'
 import SvgIcon from '@/assets/SvgIcon.vue';
 import { Collapse } from 'vue-collapsed'
 
 const emit = defineEmits(['deleteNode'])
 
-defineProps(['data', 'label', 'id', 'isChild'])
+const props = defineProps(['data', 'label', 'id', 'isChild', 'isSelected'])
 
 let isShowInfo = ref(false)
 let isShowHint = ref(false)
 
-let commandInfo = [ { name: 'Объекты', value: 'Секция' },  { name: 'Компетенции', value: 'Бригадир запуска - выдача, слесарь' } ]
+
+let commandInfo = computed(() => {
+  if (props.data) return [ { name: 'Объекты', value: props.data.linked_objects },  { name: 'Компетенции', value: props.data.linked_duties } ]
+  else return [ { name: 'Объекты', value: 'Секция' },  { name: 'Компетенции', value: 'Бригадир запуска - выдача, слесарь' } ]  
+})
 </script>
 
 <template>
   <div @mouseover="isShowInfo = true" @mouseleave="isShowInfo = false" class="command__wrapper">
     <Transition name="close-fade">
-      <div v-if="isShowInfo && !isChild" @click="emit('deleteNode', id)" class="close-wrapper">
+      <div v-if="(isShowInfo) && !isChild" @click="emit('deleteNode', id)" class="close-wrapper">
         <SvgIcon name="close"/>
       </div>
     </Transition>
-    <div class="command__main" style=" max-width: 380px; width: 360px;">
+    <div class="command__main" :class="{ 'isSelected': isSelected }" style=" max-width: 380px; width: 360px;">
       <div class="command">
         <div class="command__label">
-          {{ label ? label : 'Проверка комплектности после СО' }} {{ id }}
+          {{ data ? data.title : label }}
+          <div style="position: absolute; width: 100%; height: 10%;">
+            <div
+              v-if="(isChild && (isShowInfo | isSelected))"
+              @click="emit('deleteNode', id)"
+              class="close-wrapper close-wrapper__child"
+            >
+              <SvgIcon name="close"/>
+            </div>
+          </div>
         </div>
-        <Collapse :when="isShowInfo" class="my-class">
+        <Collapse :when="(isShowInfo | isSelected)" class="my-class">
           <Transition name="slide-fade">
-            <div v-if="isShowInfo" class="command__info-wrapper">
+            <div v-if="(isShowInfo | isSelected)" class="command__info-wrapper">
               <div class="command__info" v-for="(info, index) in commandInfo" :key="index + info.name">
                 <div class="info__name">{{ info.name }}</div>
                 <div class="info__value">{{ info.value }}</div>
@@ -121,6 +134,13 @@ let commandInfo = [ { name: 'Объекты', value: 'Секция' },  { name: 
   z-index: 10000;
 }
 
+.close-wrapper__child {
+  position: absolute;
+  right: -6%;
+  top: -20%;
+  transform: scale(0.8);
+}
+
 .hint::after {
   position: absolute;
   top: -30%;
@@ -171,7 +191,7 @@ let commandInfo = [ { name: 'Объекты', value: 'Секция' },  { name: 
   padding: 7px;
   cursor: pointer;
   max-width: 48px;
-  max-height: 24px;
+  max-height: 48px;
   margin-left: 2px;
 }
 
@@ -249,5 +269,12 @@ let commandInfo = [ { name: 'Объекты', value: 'Секция' },  { name: 
   fill: black;
 }
 
+.isSelected {
+  transition: none;
+  border: 3px solid greenyellow;
+  -webkit-box-shadow: -35px 28px 45px 6px rgba(34, 60, 80, 0.2);
+  -moz-box-shadow: -35px 28px 45px 6px rgba(34, 60, 80, 0.2);
+  box-shadow: -35px 28px 45px 6px rgba(34, 60, 80, 0.2);
+}
 
 </style>
