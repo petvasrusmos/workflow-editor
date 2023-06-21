@@ -27,7 +27,7 @@ let id = 0
 function getId() {
   return `dndnode_${id++}`
 }
-const { findNode, onNodeClick, onConnect, addEdges, onNodeDrag, onNodeDragStop, getNodes, getEdges, addNodes, project, vueFlowRef, applyNodeChanges, applyEdgeChanges} = useVueFlow({
+const { findNode, onNodeClick, onConnect, addEdges, onNodeDrag, onNodeDragStart, onNodeDragStop, getNodes, getEdges, addNodes, project, vueFlowRef, applyNodeChanges, applyEdgeChanges} = useVueFlow({
   nodes: [
     {
       id: '1',
@@ -52,6 +52,9 @@ onNodeDrag(({ intersections }) => {
     const isIntersecting = (intersectionIds.includes(n.id))
     n.class = isIntersecting ? 'intersecting' : ''
   })
+})
+onNodeDragStart((node) => {
+  node.node.selected = false
 })
 
 onNodeClick(({ node }) => {
@@ -251,6 +254,8 @@ onNodeDragStop((e) => {
       n.class = ''
     }
   })
+  e.node.selected = true
+
 })
 
 
