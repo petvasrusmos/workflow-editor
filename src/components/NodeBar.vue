@@ -2,15 +2,19 @@
   
   <form class="node-bar__wrapper" :class="{'node-bar__hidden': !node}">
     {{ title }}
+    
     <h2 class="mb-10">Настройка узла</h2>
     <v-text-field
-      v-model="nodeCopy.title"
-      :counter="10"
-      label="Шаблон Команды"
-      required
-      hide-details
-      outlined
+    v-model="nodeCopy.title"
+    :counter="10"
+    label="Шаблон Команды"
+    required
+    hide-details
+    outlined
     ></v-text-field>
+    <v-btn label="следующий" @click="emit('nextNode', id)">следующий</v-btn>
+    {{ id }}
+    <v-btn label="предыдущий">предыдущий</v-btn>
 
     <v-text-field
       v-model="state.email"

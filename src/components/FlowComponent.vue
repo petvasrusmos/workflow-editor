@@ -1,19 +1,16 @@
 <script setup>
 // import { Panel, PanelPosition, VueFlow, isNode, useVueFlow } from '@vue-flow/core'
 import { VueFlow, useVueFlow } from '@vue-flow/core'
-// import  distributeRectangles from './distribution-functions.js'
-import { distributeRectanglesTowardRight } from './distribution-functions.js' 
 import { nextTick } from 'vue'
-// import { Background } from '@vue-flow/background'
-// import { Controls } from '@vue-flow/controls'
-// import { MiniMap } from '@vue-flow/minimap'
 import { ref } from 'vue'
 import { initialElements } from './initial-elements.js'
+import { distributeRectanglesTowardRight } from './distribution-functions.js' 
+
 import ToolbarNode from './ToolbarNode.vue'
 import ResizableNode from './ResizableNode.vue'
-// import NodeSettingsBar from './NodeSettingsBar.vue'
 import NodeBar from './NodeBar.vue'
 import SideBar from './SideBar'
+import TransitionEdge from './edges/TransitionEdge.vue'
 
 import { defineProps, computed } from 'vue';
 
@@ -22,12 +19,16 @@ const selectedNode = computed(() => {
 })
 
 const elements = ref(initialElements)
+
+let triggerSwitchNode = ref(false)
+
+
 defineProps(['label'])
 let id = 0
 function getId() {
   return `dndnode_${id++}`
 }
-const { findNode, onNodeClick, onConnect, addEdges, onNodeDrag, onNodeDragStart, onNodeDragStop, getNodes, getEdges, addNodes, project, vueFlowRef, applyNodeChanges, applyEdgeChanges} = useVueFlow({
+const { onPaneReady, findNode, onConnect, addEdges, onNodeDrag, onNodeDragStart, onNodeDragStop, getNodes, getEdges, addNodes, project, vueFlowRef, applyNodeChanges, applyEdgeChanges} = useVueFlow({
   nodes: [
     {
       id: '1',
@@ -55,11 +56,6 @@ onNodeDrag(({ intersections }) => {
 })
 onNodeDragStart((node) => {
   node.node.selected = false
-})
-
-onNodeClick(({ node }) => {
-  node.data.isClicked = !node.data.isClicked
-  console.log('node.id', node)
 })
 
 const createNode = (type, targetNodeId, position) => {
@@ -100,9 +96,10 @@ const createNode = (type, targetNodeId, position) => {
       addEdges([
         {
           id: `e${targetNodeId}-${nodeId}`,
-          type: 'smoothstep',
+          type: 'custom',
           source: targetNodeId,
           target: newNode.id,
+          animated: true,
           zIndex: 22,
         },
       ])
@@ -248,7 +245,7 @@ onNodeDragStop((e) => {
       if(alreadyConnected.length) {
         insertNodeBetween(n, e.node)
       }
-      addEdges([{id: `e${n.id}-${e.node.id}`, source: n.id, target: e.node.id, type: 'smoothstep', zIndex: 1 }])
+      addEdges([{id: `e${n.id}-${e.node.id}`, source: n.id, target: e.node.id, type: 'custom', animated: true, style: { stroke: 'black' }, zIndex: 1 }])
       findStartNode(n)
       // SetChildrenPosition(n)
       n.class = ''
@@ -260,8 +257,26 @@ onNodeDragStop((e) => {
 
 
 onConnect((params) => addEdges([params]))
+onPaneReady((i) => {
+  i.fitView({
+    nodes: ['1'],
+  })
+})
 
 const dark = ref(false)
+
+const switchedNodeInfo = ref({
+  direction: 'next',
+  id: 0
+})
+function nextNode(id) {
+  console.log('vue flow', triggerSwitchNode.value)
+  triggerSwitchNode.value = !triggerSwitchNode.value
+  console.log('vue flow', triggerSwitchNode.value)
+  console.log('switchedInfo', id)
+  switchedNodeInfo.value.id = id
+  switchedNodeInfo.value.direction = 'next'
+}
 
 function saveNode (id) {
   let node = findNode(id) 
@@ -324,8 +339,16 @@ function deleteNode (id) {
             :id="nodeProps.id"
           />
         </template>
-      </VueFlow>
+        <template #edge-custom="props">
+          <TransitionEdge
+            :selectedNode="switchedNodeInfo ? switchedNodeInfo : null"
+            :triggerSwitchNode="triggerSwitchNode" 
+            v-bind="props"
+            />
+          </template>
+        </VueFlow>
         <NodeBar
+          @nextNode="nextNode"
           :node="selectedNode ? selectedNode.data : ''"
           :id="selectedNode ? selectedNode.id : null"
           class="node-bar"
