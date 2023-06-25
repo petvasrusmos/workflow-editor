@@ -269,13 +269,12 @@ const switchedNodeInfo = ref({
   direction: 'next',
   id: 0
 })
-function nextNode(id) {
+function switchNode(info) {
   console.log('vue flow', triggerSwitchNode.value)
   triggerSwitchNode.value = !triggerSwitchNode.value
   console.log('vue flow', triggerSwitchNode.value)
-  console.log('switchedInfo', id)
-  switchedNodeInfo.value.id = id
-  switchedNodeInfo.value.direction = 'next'
+  console.log('switchedInfo', info)
+  switchedNodeInfo.value = {...info}
 }
 
 function saveNode (id) {
@@ -341,14 +340,15 @@ function deleteNode (id) {
         </template>
         <template #edge-custom="props">
           <TransitionEdge
-            :selectedNode="switchedNodeInfo ? switchedNodeInfo : null"
+            :selectedNode="selectedNode ? selectedNode.id : null"
+            :switchNodeInfo="switchedNodeInfo ? switchedNodeInfo : null"
             :triggerSwitchNode="triggerSwitchNode" 
             v-bind="props"
             />
           </template>
         </VueFlow>
         <NodeBar
-          @nextNode="nextNode"
+          @switchNode="switchNode"
           :node="selectedNode ? selectedNode.data : ''"
           :id="selectedNode ? selectedNode.id : null"
           class="node-bar"

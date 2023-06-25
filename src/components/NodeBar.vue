@@ -12,9 +12,9 @@
     hide-details
     outlined
     ></v-text-field>
-    <v-btn label="следующий" @click="emit('nextNode', id)">следующий</v-btn>
+    <v-btn label="следующий" @click="emit('switchNode', { id, direction: 'next'})">следующий</v-btn>
     {{ id }}
-    <v-btn label="предыдущий">предыдущий</v-btn>
+    <v-btn @click="emit('switchNode', { id, direction: 'previous'})" label="предыдущий">предыдущий</v-btn>
 
     <v-text-field
       v-model="state.email"
@@ -99,7 +99,7 @@
 <script setup>
 import { reactive, defineProps, toRef, defineEmits } from 'vue'
 const props = defineProps(['node', 'id'])
-const emit = defineEmits(['deleteNode', 'saveNode'])
+const emit = defineEmits(['deleteNode', 'saveNode', 'switchNode'])
 // let picker = reactive(null)
 import { linkedObjects, duties } from './initial-elements'
 // let title = reactive('')

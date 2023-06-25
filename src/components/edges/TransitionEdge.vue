@@ -55,6 +55,9 @@ const props = defineProps({
   selectedNode: {
     type: Object,
   },
+  switchNodeInfo: {
+    type: Object,
+  },
   triggerSwitchNode: {
     type: Boolean,
   }
@@ -72,80 +75,100 @@ const { onNodeDoubleClick, fitBounds, fitView, findNode } = useVueFlow()
 
 
 watch(() => props.triggerSwitchNode, () => {
-  const node = findNode(props.selectedNode.id)
-  node.selected = false
-  console.log('selectedNodeId', props.selectedNode, props.id)
-  const isSource = props.source === node.id
-  console.log(props.source, props.target)
-  const isTarget = props.target === node.id
+  let directionSource = null
+  if (props.switchNodeInfo.direction === 'next') directionSource = props.source
+  else directionSource = props.target
+  if (props.selectedNode && (directionSource === props.selectedNode)) {
 
-  if (!showDot.value && (isSource || isTarget)) {
-    showDot.value = true
-    let totalLength = curve.value.getTotalLength()
-    const initialPos = ref(isSource ? 0 : totalLength)
-    let stopHandle
+    let node = null
+    let target = findNode(props.target)
+    if (props.switchNodeInfo.direction === 'next') {
+      node = findNode(props.selectedNode)
+    } else {
+      node = findNode(props.source)
+    }
+    // let edgeN = null
+    // getEdges.value.find(edge => {
+    //   if (edge.source === props.selectedNode) {
+    //     target = findNode(edge.target)
+    //     edgeN = edge
+    //   }
+    // })
+    const isSource = props.switchNodeInfo.direction === 'next'
+    console.log(props.source, props.target)
+    const isTarget = props.switchNodeInfo.direction === 'previous'
+    // if (isSource) {
+    // node.selected = false
+    if (!showDot.value && (isSource || isTarget)) {
+      showDot.value = true
+      let totalLength = curve.value.getTotalLength()
+      const initialPos = ref(isSource ? 0 : totalLength)
+      let stopHandle
 
-    const output = useTransition(initialPos, {
-      duration: (Math.floor(totalLength / 2 / 100) * 1000) / 2.3,
-      transition: TransitionPresets.easeOutCubic,
-      onFinished: () => {
-        stopHandle?.()
-        showDot.value = false
-        fitView({
-          nodes: [isSource ? props.target : props.source],
-          duration: 300,
-          maxZoom: 2.2,
-          offset: { x: -220, y: 0}
-        })
-        const targetNode = findNode(props.target)
-        targetNode.selected = true
-      },
-    })
-
-    transform.value = curve.value.getPointAtLength(output.value)
-
-    debouncedFitBounds(
-      {
-        width: 200,
-        height: 200,
-        x: transform.value.x - 100,
-        y: transform.value.y - 100,
-      },
-      { duration: 200 },
-    )
-
-    setTimeout(() => {
-      initialPos.value = isSource ? totalLength : 0
-      console.log(isSource, 'isSource')
-
-      stopHandle = watchDebounced(
-        output,
-        (next) => {
-          if (!showDot.value) {
-            return
-          }
-
-          const nextLength = curve.value.getTotalLength()
-
-          if (totalLength !== nextLength) {
-            totalLength = nextLength
-            initialPos.value = isSource ? totalLength : 0
-          }
-
-          transform.value = curve.value.getPointAtLength(next)
-
-          debouncedFitBounds({
-            width: 100,
-            height: 200,
-            x: transform.value.x - 100,
-            y: transform.value.y - 100,
+      const output = useTransition(initialPos, {
+        duration: (Math.floor(totalLength / 2 / 100) * 1000) / 2.3,
+        transition: TransitionPresets.easeOutCubic,
+        onFinished: () => {
+          stopHandle?.()
+          showDot.value = false
+          fitView({
+            nodes: [isSource ? props.target : props.source],
+            duration: 300,
+            maxZoom: 2.2,
+            offset: { x: -220, y: 0}
           })
+          if (isSource) {
+            target.selected = true
+          } else node.selected = true
         },
-        { debounce: 1 },
+      })
+
+      transform.value = curve.value.getPointAtLength(output.value)
+
+      debouncedFitBounds(
+        {
+          width: 200,
+          height: 200,
+          x: transform.value.x - 100,
+          y: transform.value.y - 100,
+        },
+        { duration: 200 },
       )
-      
-    }, 200)
-    node.selected = false
+
+      setTimeout(() => {
+        initialPos.value = isSource ? totalLength : 0
+
+        stopHandle = watchDebounced(
+          output,
+          (next) => {
+            if (!showDot.value) {
+              return
+            }
+
+            const nextLength = curve.value.getTotalLength()
+
+            if (totalLength !== nextLength) {
+              totalLength = nextLength
+              initialPos.value = isSource ? totalLength : 0
+            }
+
+            transform.value = curve.value.getPointAtLength(next)
+
+            debouncedFitBounds({
+              width: 100,
+              height: 200,
+              x: transform.value.x - 100,
+              y: transform.value.y - 100,
+            })
+          },
+          { debounce: 1 },
+        )
+        
+      }, 200)
+      if (isSource) {
+      node.selected = false
+      } else target.selected = false
+    }
   }
 })
 // watch(props.triggerSwitchNode, (value) => {
@@ -153,22 +176,27 @@ watch(() => props.triggerSwitchNode, () => {
 //     console.log(value, 'value')
 //   }
 // })
-
-const path = computed(() =>
-  getBezierPath({
-    sourceX: props.sourceX,
-    sourceY: props.sourceY,
-    sourcePosition: props.sourcePosition,
-    targetX: props.targetX,
-    targetY: props.targetY,
-    targetPosition: props.targetPosition,
+// let edge = computed(() => {
+//   let selectedEdge = null
+//   getEdges.value.find(e => {
+//     if (props.selectedNode === e.source) selectedEdge = e
+//   })
+//   console.log(selectedEdge, 'eeeeedge')
+//   return selectedEdge
+// })
+const path = computed(() => 
+    getBezierPath({
+      sourceX: props.sourceX,
+      sourceY: props.sourceY,
+      sourcePosition: props.sourcePosition,
+      targetX: props.targetX,
+      targetY: props.targetY,
+      targetPosition: props.targetPosition,
   }),
 )
-console.log(path, 'path')
 const debouncedFitBounds = useDebounceFn(fitBounds, 1, { maxWait: 1 })
 
 onNodeDoubleClick(({ node }) => {
-  console.log('dblClick', props.selectedNode) 
   // const isSource = props.source === node.id
   // const isTarget = props.target === node.id
 
